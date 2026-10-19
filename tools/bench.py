@@ -334,6 +334,17 @@ def cmd_run(a):
 # ------------------------------------------------------------------ merge
 def cmd_merge(a):
     store = read_store()
+    # Drop rows for instances that are no longer in the index (e.g. a family was
+    # re-generated and a file was dropped, or a malformed file was excluded).
+    # The store is cumulative, so without this those rows would keep showing up
+    # in the Validity sheet forever.
+    if os.path.exists(INDEX):
+        live = {r["path"] for r in csv.DictReader(open(INDEX))}
+        stale = [k for k in store if k[2] not in live]
+        for k in stale:
+            del store[k]
+        if stale:
+            print(f"pruned {len(stale)} stored row(s) for instances no longer in the index")
     n = 0
     for path in sorted(glob.glob(a.inputs)):
         with open(path, newline="") as f:
