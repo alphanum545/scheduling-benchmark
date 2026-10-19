@@ -1,0 +1,122 @@
+# Algorithm registry. Add one block per algorithm; the block name is the algorithm's ID.
+#
+#   source      path to a single .cpp file (relative to the repository root)
+#   input       "d3"  = stripped file: n p, computation matrix, communication matrix (default)
+#               "raw" = the original D1/D2 file, unchanged (e.g. energy algorithms)
+#   output      "schedule" = prints a table "task start finish processor" after a header line;
+#                            every schedule is validated (default)
+#               "makespan" = prints only the makespan; checked against the lower bound only
+#   args        command-line arguments, e.g. ["1.0"]
+#   duplication true if the algorithm may duplicate the entry task (LSTD)
+#   enabled     false to exclude from "all"
+#   timeout     seconds per run (default 900)
+#   flags       compiler flags (default "-O2 -std=c++17")
+#
+# Results are cached per algorithm: changing its source, args or flags reruns it automatically.
+
+[heft]
+source = "algorithms/makespan/heft.cpp"
+
+[cpop]
+source = "algorithms/makespan/cpop.cpp"
+
+[peft]
+source = "algorithms/makespan/peft.cpp"
+
+[ipeft]
+source = "algorithms/makespan/ipeft.cpp"
+
+[mpeft]
+source = "algorithms/makespan/mpeft.cpp"
+
+[lstd]
+source = "algorithms/makespan/lstd.cpp"
+duplication = true
+
+[ppts]
+source = "algorithms/makespan/ppts.cpp"
+
+[ippts]
+source = "algorithms/makespan/ippts.cpp"
+
+[aeft]
+source = "algorithms/makespan/aeft.cpp"
+
+[oppts]
+# OPPTS as defined in the paper: rank = mean(OPCM)
+source = "algorithms/makespan/oppts.cpp"
+
+[oppts_outdeg]
+# OPPTS as originally coded: rank = mean(OPCM) x out-degree
+source = "algorithms/makespan/oppts_outdeg.cpp"
+enabled = false
+
+[cpmin]
+# critical-path lower bound (prints one number); reads the 5 parameter vectors, so it gets D2 layout
+source = "algorithms/makespan/cpmin.cpp"
+input = "d2"
+output = "makespan"
+enabled = false
+
+# ---------------------------------------------------------------------------
+# Energy-constrained DVFS schedulers (algorithms/energy/).
+# They all read the 5 energy-parameter vectors, so they need input = "d2",
+# and they print only a makespan, so output = "makespan".
+# argv[1] is the energy-budget multiplier PARAM: the global budget is
+# (1 + PARAM) * E_min_g, so PARAM=1 means twice the minimum feasible energy.
+# ---------------------------------------------------------------------------
+
+[eheft]
+# weighted-slack energy sharing; ESMM-style priority; has a safe fallback
+source = "algorithms/energy/EHEFT.cpp"
+input = "d2"
+output = "makespan"
+args = ["1.0"]
+
+[esecc]
+source = "algorithms/energy/ESECC.cpp"
+input = "d2"
+output = "makespan"
+args = ["1.0"]
+
+[isaecc]
+source = "algorithms/energy/ISAECC.cpp"
+input = "d2"
+output = "makespan"
+args = ["1.0"]
+
+[mslecc]
+source = "algorithms/energy/MSLECC.cpp"
+input = "d2"
+output = "makespan"
+args = ["1.0"]
+
+[rep]
+source = "algorithms/energy/REP.cpp"
+input = "d2"
+output = "makespan"
+args = ["1.0"]
+
+[rsmecc]
+source = "algorithms/energy/RSMECC.cpp"
+input = "d2"
+output = "makespan"
+args = ["1.0"]
+
+# The two D1-layout variants read ONE EXTRA leading vector that the "d2"
+# conversion drops, so they need the untouched file (input = "raw").
+# That makes them D1-only: run them with datasets = D1
+# (LIGO, Montage, Genome). Disabled by default so "all" never misparses them.
+[erws]
+source = "algorithms/energy/ERWS.cpp"
+input = "raw"
+output = "makespan"
+args = ["1.0"]
+enabled = false
+
+[algo3]
+source = "algorithms/energy/algo3.cpp"
+input = "raw"
+output = "makespan"
+args = ["1.0"]
+enabled = false

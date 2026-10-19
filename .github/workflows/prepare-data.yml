@@ -1,0 +1,49 @@
+name: Prepare data
+
+# Run once after uploading (or changing) dataset archives on the release tagged "data".
+# Downloads every archive, checks every instance file, and commits data_index.csv.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bench-store
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download and unpack all dataset archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/fetch_data.py --all
+
+      - name: Check every instance and build the index
+        run: |
+          python3 tools/bench.py index --data data | tee index.log
+          {
+            echo "## Dataset index"
+            echo '```'
+            cat index.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit data_index.csv
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data_index.csv
+          git commit -m "Update dataset index" || { echo "index unchanged"; exit 0; }
+          for i in 1 2 3; do git pull --rebase && git push && exit 0; sleep 5; done
+          exit 1
