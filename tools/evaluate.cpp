@@ -75,6 +75,8 @@ static int cmdStrip(const char *in, const char *out, const char *out2) {
     vector<string> t = readTokens(in);
     if (t.size() < 2) { fprintf(stderr, "empty instance\n"); return 2; }
     Inst I; I.n = atoi(t[0].c_str()); I.p = atoi(t[1].c_str());
+    if (I.n <= 0) { fprintf(stderr, "%s: instance has %d tasks (empty or truncated)\n", in, I.n); return 6; }
+    if (I.p <= 0) { fprintf(stderr, "%s: instance has %d processors\n", in, I.p); return 6; }
     size_t body = (size_t)I.n * I.p + (size_t)I.n * I.n, hdr = 0; const char *fmt = nullptr;
     if (t.size() == 2 + 6 * (size_t)I.p + body) { hdr = 6 * I.p; fmt = "D1"; }
     else if (t.size() == 2 + 5 * (size_t)I.p + body) { hdr = 5 * I.p; fmt = "D2"; }
