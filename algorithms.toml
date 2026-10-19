@@ -60,10 +60,19 @@ enabled = false
 
 # ---------------------------------------------------------------------------
 # Energy-constrained DVFS schedulers (algorithms/energy/).
+#
+# ALL OF THEM ARE DISABLED (enabled = false), so "all" never runs them and the
+# benchmark stays purely about makespan. Their sources are kept here for
+# reference; run them explicitly when you want them, e.g.
+#
+#   algos=eheft,esecc,isaecc,mslecc,rep,rsmecc
+#
 # They all read the 5 energy-parameter vectors, so they need input = "d2",
 # and they print only a makespan, so output = "makespan".
 # argv[1] is the energy-budget multiplier PARAM: the global budget is
 # (1 + PARAM) * E_min_g, so PARAM=1 means twice the minimum feasible energy.
+# NOTE: ESECC is the odd one out - it uses PARAM * E_min_g, so at PARAM=1 it
+# runs on half the energy of the others. See REPO_ANALYSIS.md section 12.1.
 # ---------------------------------------------------------------------------
 
 [eheft]
@@ -72,41 +81,47 @@ source = "algorithms/energy/EHEFT.cpp"
 input = "d2"
 output = "makespan"
 args = ["1.0"]
+enabled = false
 
 [esecc]
 source = "algorithms/energy/ESECC.cpp"
 input = "d2"
 output = "makespan"
 args = ["1.0"]
+enabled = false
 
 [isaecc]
 source = "algorithms/energy/ISAECC.cpp"
 input = "d2"
 output = "makespan"
 args = ["1.0"]
+enabled = false
 
 [mslecc]
 source = "algorithms/energy/MSLECC.cpp"
 input = "d2"
 output = "makespan"
 args = ["1.0"]
+enabled = false
 
 [rep]
 source = "algorithms/energy/REP.cpp"
 input = "d2"
 output = "makespan"
 args = ["1.0"]
+enabled = false
 
 [rsmecc]
 source = "algorithms/energy/RSMECC.cpp"
 input = "d2"
 output = "makespan"
 args = ["1.0"]
+enabled = false
 
 # The two D1-layout variants read ONE EXTRA leading vector that the "d2"
 # conversion drops, so they need the untouched file (input = "raw").
 # That makes them D1-only: run them with datasets = D1
-# (LIGO, Montage, Genome). Disabled by default so "all" never misparses them.
+# (LIGO, Montage, Genome).
 [erws]
 source = "algorithms/energy/ERWS.cpp"
 input = "raw"
