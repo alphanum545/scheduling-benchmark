@@ -66,6 +66,11 @@ def pick_algos(spec, algos):
         sys.exit(f"unknown algorithm(s): {missing}. Known: {list(algos)}")
     return names
 
+def split_of(path):
+    """Fixed development/test split: about 1 instance in 4 is 'dev' (for designing and tuning
+    algorithms), the rest is 'test' (held out for the final comparison). Depends only on the path."""
+    return "dev" if int(hashlib.sha256(path.encode()).hexdigest()[:8], 16) % 4 == 0 else "test"
+
 def csvset(s, cast=str):
     return None if s in (None, "", "all") else {cast(x.strip()) for x in str(s).split(",") if x.strip()}
 
@@ -186,8 +191,10 @@ def write_rows(path, rows, fields=FIELDS):
 def select(index, a):
     sel = {k: csvset(getattr(a, k), int if k in ("nodes", "procs", "instances") else str)
            for k in ("datasets", "families", "nodes", "procs", "instances")}
+    split = getattr(a, "split", "all") or "all"
     out = []
     for r in index:
+        if split != "all" and split_of(r["path"]) != split: continue
         if sel["datasets"] and r["dataset"] not in sel["datasets"]: continue
         if sel["families"] and r["family"] not in sel["families"]: continue
         if sel["nodes"] and int(r["nodes"]) not in sel["nodes"]: continue
@@ -365,6 +372,8 @@ def main():
     p.add_argument("--algos", default="all")
     for k in ("datasets", "families", "nodes", "procs", "instances"):
         p.add_argument(f"--{k}", default="all")
+    p.add_argument("--split", default="all", choices=["all", "dev", "test"],
+                   help="dev = about 1/4 of the instances for designing algorithms; test = the held-out rest")
     p.add_argument("--shards", type=int, default=1)
     p.add_argument("--split-nodes", type=int, default=500, help="instances with at least this many tasks run each algorithm as a separate job")
     p.add_argument("--force", action="store_true", help="ignore stored results and rerun everything")

@@ -62,12 +62,15 @@ def main():
     ap.add_argument("--format", default="D2", choices=["D1", "D2"])
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--prefix", default="R-", help="family name prefix")
+    ap.add_argument("--only", default="", help="comma-separated family names to generate (default: all)")
     a = ap.parse_args()
     fl = lambda s: [float(x) for x in s.split(",")]
     k = 0
     for ccr in fl(a.ccr):
         for beta in fl(a.beta):
             fam = f"{a.prefix}ccr{ccr:g}-b{beta:g}"
+            if a.only and fam not in a.only.split(","):
+                continue
             for n in map(int, a.nodes.split(",")):
                 for i in range(1, a.count + 1):
                     for p in map(int, a.procs.split(",")):
