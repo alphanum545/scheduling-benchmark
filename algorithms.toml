@@ -177,3 +177,34 @@ enabled = false
 source = "algorithms/makespan/lab.cpp"
 args = ["rank=regret:0.5", "sel=lookall", "own=0.5"]
 enabled = false
+
+# --- round 2: isolate the effect of state-awareness ---
+[a1]
+# AEFT with its static look-ahead replaced by the state-aware one (keeps AEFT's fan-out rule)
+source = "algorithms/makespan/lab.cpp"
+args = ["rank=mean", "sel=lookall", "own=1", "switch=1"]
+enabled = false
+
+[a2]
+# a1 without the fan-out rule
+source = "algorithms/makespan/lab.cpp"
+args = ["rank=mean", "sel=lookall", "own=1"]
+enabled = false
+
+[a3]
+# a1 with the critical child only
+source = "algorithms/makespan/lab.cpp"
+args = ["rank=mean", "sel=look1", "own=1", "switch=1"]
+enabled = false
+
+[a4]
+# a1 with half the own-cost term
+source = "algorithms/makespan/lab.cpp"
+args = ["rank=mean", "sel=lookall", "own=0.5", "switch=1"]
+enabled = false
+
+[a5]
+# diagnostic: AEFT selection without double-counting the task's own cost (static OCT)
+source = "algorithms/makespan/lab.cpp"
+args = ["rank=mean", "sel=oct"]
+enabled = false
