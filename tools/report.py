@@ -17,7 +17,7 @@ import argparse, os, sys
 import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from bench import ROOT, STORE, load_algos, pick_algos, csvset  # noqa: E402
+from bench import ROOT, STORE, load_algos, pick_algos, csvset, split_of  # noqa: E402
 
 # categorical palette, fixed order (validated set); slots past 8 fall back to grays with marker/dash encoding
 PALETTE = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
@@ -40,6 +40,8 @@ def load(a):
         s = csvset(flt, cast)
         if s:
             df = df[df[col].isin(s)]
+    if a.split != "all":
+        df = df[df.path.map(split_of) == a.split]
     missing = [n for n in names if n not in set(df.algo)]
     if missing:
         print(f"warning: no results for {missing} (current version); leaving them out of this report")
@@ -172,6 +174,7 @@ def main():
     ap.add_argument("--highlight", default=None, help="your proposed algorithm: drawn first, gains computed against it")
     for k in ("datasets", "families", "nodes", "procs"):
         ap.add_argument(f"--{k}", default="all")
+    ap.add_argument("--split", default="all", choices=["all", "dev", "test"])
     ap.add_argument("--name", default="latest")
     ap.add_argument("--no-figures", action="store_true")
     a = ap.parse_args()

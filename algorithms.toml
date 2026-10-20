@@ -19,6 +19,7 @@ source = "algorithms/makespan/heft.cpp"
 
 [cpop]
 source = "algorithms/makespan/cpop.cpp"
+enabled = false
 
 [peft]
 source = "algorithms/makespan/peft.cpp"
@@ -134,4 +135,45 @@ source = "algorithms/energy/algo3.cpp"
 input = "raw"
 output = "makespan"
 args = ["1.0"]
+enabled = false
+
+# ---------------------------------------------------------------------------
+# Candidate methods for the OPPTS rewrite (one configurable source, lab.cpp).
+# Disabled so that "all" stays the published baselines; run them explicitly, e.g.
+#   algos=aeft,oppts,heft,lab_aeft,m3,m2,m2h,m1,m5   split=dev
+# lab_aeft must reproduce aeft exactly (sanity check of the shared code).
+# ---------------------------------------------------------------------------
+[lab_aeft]
+source = "algorithms/makespan/lab.cpp"
+args = ["rank=mean", "sel=aeft"]
+enabled = false
+
+[m3]
+# state-aware look-ahead, critical child only
+source = "algorithms/makespan/lab.cpp"
+args = ["rank=mean", "sel=look1"]
+enabled = false
+
+[m2]
+# state-aware look-ahead, all children (contention-aware)
+source = "algorithms/makespan/lab.cpp"
+args = ["rank=mean", "sel=lookall"]
+enabled = false
+
+[m2h]
+# m2 plus half of the task's own cost on the processor (heterogeneity preference)
+source = "algorithms/makespan/lab.cpp"
+args = ["rank=mean", "sel=lookall", "own=0.5"]
+enabled = false
+
+[m1]
+# heterogeneity-regret rank with AEFT selection
+source = "algorithms/makespan/lab.cpp"
+args = ["rank=regret:1", "sel=aeft"]
+enabled = false
+
+[m5]
+# hybrid: regret rank + all-children state-aware look-ahead
+source = "algorithms/makespan/lab.cpp"
+args = ["rank=regret:0.5", "sel=lookall", "own=0.5"]
 enabled = false
