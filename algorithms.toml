@@ -208,3 +208,125 @@ enabled = false
 source = "algorithms/makespan/lab.cpp"
 args = ["rank=mean", "sel=oct"]
 enabled = false
+
+# ---------------------------------------------------------------------------
+# Round 3 (lab2.cpp): complexity-bounded look-ahead (top-R children, incremental data-ready times)
+# and per-task blending with the static OPPTS score. b_a1 must reproduce a1 exactly.
+# ---------------------------------------------------------------------------
+[b_a1]
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=ioct", "kids=0", "own=1", "switch=1", "lam=const:1"]
+enabled = false
+
+[b_oppts]
+# must reproduce OPPTS (static score only, no fan-out rule)
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=ioct", "lam=const:0"]
+enabled = false
+
+[b_oppts2]
+# must reproduce OPPTS
+source = "algorithms/makespan/lab2.cpp"
+args = ["tbl=opcm", "lam=const:0"]
+enabled = false
+
+[b_heft]
+# must reproduce HEFT
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0"]
+enabled = false
+
+[c_he25]
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.25"]
+enabled = false
+
+[c_he50]
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.5"]
+enabled = false
+
+[c_he100]
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:1"]
+enabled = false
+
+[c_op25]
+source = "algorithms/makespan/lab2.cpp"
+args = ["tbl=opcm", "lam=const:0.25"]
+enabled = false
+
+[c_op50]
+source = "algorithms/makespan/lab2.cpp"
+args = ["tbl=opcm", "lam=const:0.5"]
+enabled = false
+
+[c_op75]
+source = "algorithms/makespan/lab2.cpp"
+args = ["tbl=opcm", "lam=const:0.75"]
+enabled = false
+
+[c_op100]
+source = "algorithms/makespan/lab2.cpp"
+args = ["tbl=opcm", "lam=const:1"]
+enabled = false
+
+[c_op50k1]
+source = "algorithms/makespan/lab2.cpp"
+args = ["tbl=opcm", "lam=const:0.5", "kids=1"]
+enabled = false
+
+[c_op50k2]
+source = "algorithms/makespan/lab2.cpp"
+args = ["tbl=opcm", "lam=const:0.5", "kids=2"]
+enabled = false
+
+[c_he50k2]
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.5", "kids=2"]
+enabled = false
+
+[c_he50o0]
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.5", "own=0"]
+enabled = false
+
+[c_he35]
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.35"]
+enabled = false
+
+[c_he65]
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.65"]
+enabled = false
+
+[c_he50k1]
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.5", "kids=1"]
+enabled = false
+
+[c_he50k3]
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.5", "kids=3"]
+enabled = false
+
+[c_he50s]
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.5", "switch=1"]
+enabled = false
+
+[c_he50o5]
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.5", "own=0.5"]
+enabled = false
+
+[c_heccr]
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=ccr:0.5:0.15"]
+enabled = false
+
+[c_io50]
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=ioct", "base=eft", "lam=const:0.5"]
+enabled = false
