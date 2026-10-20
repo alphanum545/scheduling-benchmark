@@ -194,7 +194,11 @@ def main():
     n_inst, n_all = c.path.nunique(), df.path.nunique()
     pw = pairwise(c, names)
     runtime = df.groupby(["algo", "nodes"]).runtime_s.mean().unstack().reindex(names).round(4)
-    overall = c.groupby("algo")[["makespan", "slr", "speedup", "efficiency", "runtime_s"]].mean().reindex(names).round(4)
+    cols = ["makespan", "slr", "speedup", "efficiency", "runtime_s"]
+    extra = [k for k in ("comm_ratio", "imbalance", "utilization", "rob_ratio", "rob_cv")
+             if k in c and c.groupby("algo")[k].count().reindex(names).fillna(0).min() == c.groupby("algo").size().reindex(names).min()]
+    overall = c.groupby("algo")[cols].mean().reindex(names).round(4)
+    secondary = c.groupby("algo")[extra].mean().reindex(names).round(4) if extra else None
 
     tables = {
         "Overall": overall,
@@ -208,6 +212,8 @@ def main():
         "Pairwise": pw.set_index(["algorithm", "versus"]),
         "Runtime_s_by_tasks": runtime,
     }
+    if secondary is not None:
+        tables["Secondary_metrics"] = secondary
     sig = significance_tables(c, names, a.highlight) if len(names) > 1 else {"_markdown": ""}
     sig_md = sig.pop("_markdown")
     tables.update(sig)
@@ -231,6 +237,11 @@ def main():
           f"Algorithms: {', '.join(names)}  ",
           f"Instances compared: {n_inst} of {n_all} (only those where every algorithm is valid)", "",
           "## Validity", validity.to_markdown(), "", "## Overall averages", overall.to_markdown(), ""]
+    if secondary is not None:
+        md += ["## Secondary metrics (means over the compared instances)",
+               "comm_ratio = communication paid / total; imbalance = max / mean processor busy time; "
+               "utilization = busy / (p x makespan); rob_ratio = mean makespan under +-20% cost noise / makespan; "
+               "rob_cv = coefficient of variation of the perturbed makespans.", "", secondary.to_markdown(), ""]
     if a.highlight:
         hp = pw[pw.algorithm == a.highlight].set_index("versus").drop(columns="algorithm")
         md += [f"## {a.highlight} versus each algorithm", hp.to_markdown(), ""]

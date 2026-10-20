@@ -11,7 +11,17 @@
 //
 //   evaluate check <d3_instance> <algorithm_stdout> [--dup-entry]
 //       Parses the schedule table printed by an algorithm and validates it.
-//       Prints JSON: {"makespan":..,"valid":0/1,"violations":..,"first":"..."}
+//       Prints JSON: {"makespan":..,"valid":0/1,"violations":..,"first":"..."}; for a valid schedule
+//       also secondary metrics:
+//         comm_ratio      communication cost paid (edges across processors) / total communication cost
+//         imbalance       max processor busy time / mean processor busy time
+//         utilization     total busy time / (p * makespan)
+//         rob_ratio       mean makespan over 30 replays with every computation and communication cost
+//                         scaled by an independent factor in U[0.8, 1.2], divided by the makespan.
+//                         The replay keeps the processor mapping and each processor's task order;
+//                         the random factors depend only on the instance, so all algorithms see
+//                         the same perturbations (paired comparison).
+//         rob_cv          coefficient of variation of the replayed makespans
 //
 // Build: g++ -O2 -std=c++17 -o evaluate evaluate.cpp
 #include <cstdio>
@@ -23,6 +33,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <cmath>
 using namespace std;
 typedef long long ll;
 
@@ -158,7 +169,56 @@ static int cmdCheck(const char *inst, const char *sched, bool dupEntry) {
             for (size_t k = 1; k < slots[j].size(); k++) if (slots[j][k].first < slots[j][k - 1].second) bad("overlap on processor " + to_string(j + 1));
         }
     }
-    printf("{\"makespan\":%lld,\"valid\":%d,\"violations\":%d,\"first\":\"%s\"}\n", mk, nv ? 0 : 1, nv, esc(first).c_str());
+    if (nv || mk <= 0) {
+        printf("{\"makespan\":%lld,\"valid\":%d,\"violations\":%d,\"first\":\"%s\"}\n", mk, nv ? 0 : 1, nv, esc(first).c_str());
+        return 0;
+    }
+    // ---- secondary metrics (valid schedules only)
+    double commAll = 0, commPaid = 0;
+    for (int v = 0; v < I.n; v++) for (auto &e : I.pred[v]) {
+        commAll += e.second;
+        if (pr[e.first] != pr[v] && !(dupEntry && I.pred[e.first].empty())) commPaid += e.second;
+    }
+    vector<double> busy(I.p, 0);
+    for (int i = 0; i < I.n; i++) busy[pr[i]] += ft[i] - st[i];
+    double tot = 0, mx = 0; for (double b : busy) { tot += b; mx = max(mx, b); }
+    double imbalance = tot > 0 ? mx / (tot / I.p) : 1, util = tot / ((double)I.p * mk);
+    // robustness replay: per-processor order by start time; tasks in topological order of
+    // (precedence + processor order); perturbed costs drawn per task and per edge in a fixed order
+    vector<vector<int>> onp(I.p);
+    for (int i = 0; i < I.n; i++) onp[pr[i]].push_back(i);
+    for (auto &q : onp) sort(q.begin(), q.end(), [&](int a, int b) { return st[a] < st[b] || (st[a] == st[b] && a < b); });
+    vector<int> prevOn(I.n, -1);
+    for (auto &q : onp) for (size_t k = 1; k < q.size(); k++) prevOn[q[k]] = q[k - 1];
+    vector<int> ord(I.n); for (int i = 0; i < I.n; i++) ord[i] = i;
+    sort(ord.begin(), ord.end(), [&](int a, int b) { return st[a] < st[b] || (st[a] == st[b] && ft[a] < ft[b]) || (st[a] == st[b] && ft[a] == ft[b] && a < b); });
+    const int RUNS = 30; vector<double> mks;
+    unsigned long long seed = 1469598103934665603ULL; // instance-dependent seed (FNV over n, p, edges)
+    for (unsigned long long x : {(unsigned long long)I.n, (unsigned long long)I.p, (unsigned long long)I.edges}) { seed ^= x; seed *= 1099511628211ULL; }
+    unsigned long long rs = seed;
+    auto rnd = [&]() { rs ^= rs << 13; rs ^= rs >> 7; rs ^= rs << 17; return (double)(rs >> 11) / 9007199254740992.0; };
+    for (int r = 0; r < RUNS; r++) {
+        vector<double> w(I.n); for (int i = 0; i < I.n; i++) w[i] = I.comp[i][pr[i]] * (0.8 + 0.4 * rnd());
+        vector<vector<double>> cm(I.n);
+        for (int v = 0; v < I.n; v++) for (auto &e : I.pred[v]) cm[v].push_back(e.second * (0.8 + 0.4 * rnd()));
+        vector<double> s2(I.n, 0), f2(I.n, 0);
+        for (int v : ord) {
+            double t0 = prevOn[v] >= 0 ? f2[prevOn[v]] : 0;
+            for (size_t k = 0; k < I.pred[v].size(); k++) {
+                int u = I.pred[v][k].first;
+                double need = (pr[u] == pr[v]) ? f2[u] : f2[u] + cm[v][k];
+                if (dupEntry && I.pred[u].empty()) need = min(need, w[u]);
+                t0 = max(t0, need);
+            }
+            s2[v] = t0; f2[v] = t0 + w[v];
+        }
+        mks.push_back(*max_element(f2.begin(), f2.end()));
+    }
+    double mean = 0; for (double x : mks) mean += x; mean /= RUNS;
+    double var = 0; for (double x : mks) var += (x - mean) * (x - mean); var /= RUNS;
+    printf("{\"makespan\":%lld,\"valid\":1,\"violations\":0,\"first\":\"\",\"comm_ratio\":%.6f,\"imbalance\":%.6f,"
+           "\"utilization\":%.6f,\"rob_ratio\":%.6f,\"rob_cv\":%.6f}\n",
+           mk, commAll > 0 ? commPaid / commAll : 0.0, imbalance, util, mean / mk, mean > 0 ? sqrt(var) / mean : 0.0);
     return 0;
 }
 
