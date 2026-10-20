@@ -531,3 +531,51 @@ enabled = false
 source = "algorithms/makespan/lab4.cpp"
 args = ["rank=heft", "beta=0.5", "ins=1"]
 enabled = false
+
+# --- Round 5b: explicit weight gamma on the repeated child computation cost (gamma 0 = IOCT, 1 = OPCM)
+[g_ins_g0]
+source = "algorithms/makespan/lab4.cpp"
+args = ["rank=heft", "ins=1", "gamma=0"]
+enabled = false
+
+[g_ins_g25]
+source = "algorithms/makespan/lab4.cpp"
+args = ["rank=heft", "ins=1", "gamma=0.25"]
+enabled = false
+
+[g_ins_g50]
+source = "algorithms/makespan/lab4.cpp"
+args = ["rank=heft", "ins=1", "gamma=0.5"]
+enabled = false
+
+[g_ins_g100]
+source = "algorithms/makespan/lab4.cpp"
+args = ["rank=heft", "ins=1", "gamma=1"]
+enabled = false
+
+[g_ins_g0_net]
+# no repetition anywhere: IOCT-style table and the task's own cost removed from the selection
+source = "algorithms/makespan/lab4.cpp"
+args = ["rank=heft", "ins=1", "gamma=0", "sel=net"]
+enabled = false
+
+[g_ins_g0_b50]
+source = "algorithms/makespan/lab4.cpp"
+args = ["rank=heft", "ins=1", "gamma=0", "beta=0.5"]
+enabled = false
+
+[g_ins_g0_net_b50]
+source = "algorithms/makespan/lab4.cpp"
+args = ["rank=heft", "ins=1", "gamma=0", "sel=net", "beta=0.5"]
+enabled = false
+
+[g_g0]
+# OPPTS order and selection, IOCT-style table (no insertion)
+source = "algorithms/makespan/lab4.cpp"
+args = ["gamma=0"]
+enabled = false
+
+[g_g0_net]
+source = "algorithms/makespan/lab4.cpp"
+args = ["gamma=0", "sel=net"]
+enabled = false
