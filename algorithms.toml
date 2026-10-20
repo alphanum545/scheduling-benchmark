@@ -420,3 +420,14 @@ enabled = false
 # BPPTS, Wang et al., Future Generation Computer Systems 166 (2025) 107733.
 # Reproduces the paper's worked example (Fig. 1 DAG, makespan 73, Tables 1 and 3).
 source = "algorithms/makespan/bppts.cpp"
+
+[left]
+# LEFT, Naik and Ansari, Cluster Computing 28 (2025) 844.
+# Reproduces the paper's worked example (Fig. 1 DAG, Table 4, makespan 76).
+source = "algorithms/makespan/left.cpp"
+
+[left_d]
+# LEFT-D (entry-task duplication), same paper. Reproduces Table 5 (makespan 73).
+source = "algorithms/makespan/left.cpp"
+args = ["dup"]
+duplication = true
