@@ -6,6 +6,8 @@
 worked_example/gantt_example.{png,pdf}   Gantt charts of HEFT, AEFT, OPPTS and SLAS on example.d3
 worked_example/gantt_example2.{png,pdf}  Gantt charts of HEFT, LEFT-D, SLAS and DSLA on example2.d3
                                           (the algorithms are compiled and run here)
+worked_example/gantt_topcuoglu_variant.{png,pdf}, dag_topcuoglu_variant.{png,pdf}
+                                         the classic 10-task graph with new costs: Gantt charts and the DAG
 scaling/bla_heft_scaling.{png,pdf}       SLAS (= BLA-HEFT) scheduling time against v and p
                                          (from scaling/bla_heft_internal_time.csv)
 Needs g++, matplotlib, pandas.
@@ -65,6 +67,55 @@ def gantt(inst_name, out_name, algs, focus):
     plt.close(fig)
 
 
+def dag(inst_name, out_name):
+    """The DAG with its communication costs on the edges and the computation-cost table beside it."""
+    d = os.path.join(HERE, "worked_example")
+    tok = open(os.path.join(d, inst_name)).read().split()
+    n, p = int(tok[0]), int(tok[1])
+    W = [[int(x) for x in tok[2 + i * p: 2 + (i + 1) * p]] for i in range(n)]
+    C = [[int(x) for x in tok[2 + n * p + i * n: 2 + n * p + (i + 1) * n]] for i in range(n)]
+    edges = [(i, j, C[i][j]) for i in range(n) for j in range(n) if C[i][j] != -1]
+    level = [0] * n
+    for i, j, _ in sorted(edges, key=lambda e: e[0]):
+        level[j] = max(level[j], level[i] + 1)
+    rows = {}
+    for t in range(n):
+        rows.setdefault(level[t], []).append(t)
+    pos = {}
+    for lv, ts in rows.items():
+        for k, t in enumerate(ts):
+            pos[t] = ((k - (len(ts) - 1) / 2) * 1.25, -lv * 1.25)
+    fig, (ax, at) = plt.subplots(1, 2, figsize=(7.2, 3.6), gridspec_kw={"width_ratios": [1.6, 1]})
+    for i, j, c in edges:
+        (x0, y0), (x1, y1) = pos[i], pos[j]
+        ax.annotate("", xy=(x1, y1 + 0.27), xytext=(x0, y0 - 0.27),
+                    arrowprops=dict(arrowstyle="-|>", color="#8a8984", lw=0.9, shrinkA=0, shrinkB=0))
+        dx = abs(x1 - x0)
+        f = 0.42 if level[i] == 0 else (0.5 if dx > 3 else 0.28 if dx >= 2 else 0.62 if level[i] == 1 else 0.5)
+        ax.text(x0 + f * (x1 - x0), y0 + f * (y1 - y0), str(c), fontsize=7.5,
+                ha="center", va="center", color="#0b0b0b",
+                bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="none"))
+    for t, (x, y) in pos.items():
+        ax.add_patch(plt.Circle((x, y), 0.27, fc="#2a78d6", ec="white", lw=1.5, zorder=3))
+        ax.text(x, y, f"T{t + 1}", ha="center", va="center", color="white", fontsize=8.5, zorder=4)
+    ax.set_aspect("equal"); ax.axis("off")
+    ax.set_xlim(min(x for x, _ in pos.values()) - 0.6, max(x for x, _ in pos.values()) + 0.6)
+    ax.set_ylim(min(y for _, y in pos.values()) - 0.5, 0.5)
+    at.axis("off")
+    cells = [[f"T{t + 1}"] + [str(w) for w in W[t]] for t in range(n)]
+    tb = at.table(cellText=cells, colLabels=["Task"] + [f"P{k + 1}" for k in range(p)], loc="center",
+                  cellLoc="center")
+    tb.auto_set_font_size(False); tb.set_fontsize(8.5); tb.scale(1, 1.25)
+    for (r, c), cell in tb.get_celld().items():
+        cell.set_edgecolor("#e6e5e0")
+        if r == 0:
+            cell.set_facecolor("#f0efec")
+    fig.tight_layout()
+    for ext in ("png", "pdf"):
+        fig.savefig(os.path.join(d, f"{out_name}.{ext}"), bbox_inches="tight", dpi=200)
+    plt.close(fig)
+
+
 def scaling():
     d = os.path.join(HERE, "scaling")
     t = pd.read_csv(os.path.join(d, "bla_heft_internal_time.csv"))
@@ -92,5 +143,10 @@ if __name__ == "__main__":
     gantt("example2.d3", "gantt_example2",
           [("heft", [], "HEFT"), ("left", ["dup"], "LEFT-D"), ("dsla", ["slas"], "SLAS (DSLA's rank-order schedule)"),
            ("dsla", [], "DSLA (keeps its earliest-finish-order schedule)")], focus=3)
+    gantt("topcuoglu_variant.d3", "gantt_topcuoglu_variant",
+          [("heft", [], "HEFT"), ("lstd", [], "LSTD (best baseline here)"),
+           ("dsla", ["slas"], "SLAS (DSLA's rank-order schedule)"),
+           ("dsla", [], "DSLA (keeps its earliest-finish-order schedule)")], focus=1)
+    dag("topcuoglu_variant.d3", "dag_topcuoglu_variant")
     scaling()
     print("figures written under paper/")
