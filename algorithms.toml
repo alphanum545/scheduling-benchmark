@@ -412,3 +412,11 @@ enabled = false
 source = "algorithms/makespan/lab2.cpp"
 args = ["rank=heft", "base=eft", "lam=const:0.5", "kids=3", "switch=1"]
 enabled = false
+
+# ---------------------------------------------------------------------------
+# Recent baselines (2025)
+# ---------------------------------------------------------------------------
+[bppts]
+# BPPTS, Wang et al., Future Generation Computer Systems 166 (2025) 107733.
+# Reproduces the paper's worked example (Fig. 1 DAG, makespan 73, Tables 1 and 3).
+source = "algorithms/makespan/bppts.cpp"
