@@ -17,6 +17,7 @@ import argparse, os, sys
 import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from stats import significance_tables
 from bench import ROOT, STORE, load_algos, pick_algos, csvset, split_of  # noqa: E402
 
 # categorical palette, fixed order (validated set); slots past 8 fall back to grays with marker/dash encoding
@@ -207,6 +208,9 @@ def main():
         "Pairwise": pw.set_index(["algorithm", "versus"]),
         "Runtime_s_by_tasks": runtime,
     }
+    sig = significance_tables(c, names, a.highlight) if len(names) > 1 else {"_markdown": ""}
+    sig_md = sig.pop("_markdown")
+    tables.update(sig)
     xlsx = os.path.join(out, "summary.xlsx")
     with pd.ExcelWriter(xlsx, engine="openpyxl") as xw:
         info = pd.DataFrame({"item": ["algorithms", "instances selected", "instances compared",
@@ -230,6 +234,7 @@ def main():
     if a.highlight:
         hp = pw[pw.algorithm == a.highlight].set_index("versus").drop(columns="algorithm")
         md += [f"## {a.highlight} versus each algorithm", hp.to_markdown(), ""]
+    md += [sig_md]
     open(os.path.join(out, "summary.md"), "w").write("\n".join(md))
 
     made = [] if a.no_figures else figures(c, names, os.path.join(out, "figures"), a.highlight)
@@ -240,6 +245,7 @@ def main():
     print(validity.to_string())
     if a.highlight:
         print(pw[pw.algorithm == a.highlight].to_string(index=False))
+    print(sig_md)
 
 
 if __name__ == "__main__":
