@@ -1,0 +1,6 @@
+{
+  "_comment": "Generated dataset families. Each key is an 'asset' name (it appears in data_index.csv's asset column); the value is the argument list for tools/generate.py. The files are rebuilt identically from the seed wherever they are needed, so nothing is uploaded. Families: R-ccr<C>-b<B> for every CCR x heterogeneity (beta) pair.",
+  "gen:random-v1": ["--nodes", "100,300,500,1000", "--procs", "4,8,16,32",
+                    "--ccr", "0.1,1,10", "--beta", "0.1,0.5,1", "--count", "5",
+                    "--seed", "1", "--prefix", "R-", "--format", "D2"]
+}

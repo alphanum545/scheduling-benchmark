@@ -9,6 +9,9 @@ Each may hold one family folder or several; macOS junk (__MACOSX, ._ files, .DS_
 is ignored. A family folder is any folder whose children are <N>Nodes folders. Data lands in
 data/<Family>/<N>Nodes/<P>PROCESSORS/... and data/.assets.json records family -> archive.
 Uses the GitHub CLI (gh); in Actions it is authenticated with the workflow token.
+
+Generated families (tools/generated.json, asset names starting with "gen:") are not downloaded:
+they are rebuilt with tools/generate.py from a fixed seed, so every machine gets identical files.
 """
 import argparse, csv, json, os, re, shutil, subprocess, sys, tarfile, tempfile, zipfile
 
@@ -56,14 +59,32 @@ def families_in(folder):
     return found
 
 
-def fetch(asset, mapping):
+GENERATED = os.path.join(ROOT, "tools", "generated.json")
+
+
+def generated_specs():
+    if not os.path.exists(GENERATED):
+        return {}
+    return {k: v for k, v in json.load(open(GENERATED)).items() if k.startswith("gen:")}
+
+
+def fetch(asset, mapping, only=None):
     tmp = tempfile.mkdtemp(prefix="fetch-", dir=os.path.join(ROOT, ".work"))
     try:
-        gh("release", "download", TAG, "--pattern", asset, "--dir", tmp, "--clobber")
-        arch = os.path.join(tmp, asset)
         ex = os.path.join(tmp, "x")
-        extract(arch, ex)
-        os.remove(arch)
+        if asset.startswith("gen:"):
+            spec = generated_specs().get(asset)
+            if spec is None:
+                sys.exit(f"{asset}: not defined in tools/generated.json")
+            cmd = [sys.executable, os.path.join(ROOT, "tools", "generate.py"), "--out", ex, *spec]
+            if only:
+                cmd += ["--only", ",".join(sorted(only))]
+            subprocess.run(cmd, check=True)
+        else:
+            gh("release", "download", TAG, "--pattern", asset, "--dir", tmp, "--clobber")
+            arch = os.path.join(tmp, asset)
+            extract(arch, ex)
+            os.remove(arch)
         fams = families_in(ex)
         if not fams:
             print(f"  ! {asset}: no <N>Nodes folders found inside; skipped")
@@ -92,8 +113,9 @@ def main():
     os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(ROOT, ".work"), exist_ok=True)
     mpath = os.path.join(DATA, ".assets.json")
     mapping = json.load(open(mpath)) if os.path.exists(mpath) else {}
+    wanted = {}
     if a.all:
-        assets = release_assets()
+        assets = release_assets() + sorted(generated_specs())
     else:
         index = os.path.join(ROOT, "data_index.csv")
         known = {}
@@ -104,11 +126,14 @@ def main():
         if missing:
             sys.exit(f"no archive recorded for {missing}; run the Prepare data workflow first")
         assets = sorted({known[f] for f in a.families})
+        for f in a.families:
+            wanted.setdefault(known[f], set()).add(f)
     if not assets:
         sys.exit(f"no archives found on release '{TAG}'")
-    print(f"downloading {len(assets)} archive(s) from release '{TAG}'")
+    print(f"fetching {len(assets)} archive(s) from release '{TAG}' / generator")
     for asset in assets:
-        fetch(asset, mapping)
+        # a generated asset holds many families; build only the ones this run needs
+        fetch(asset, mapping, wanted.get(asset) if asset.startswith("gen:") else None)
     json.dump(mapping, open(mpath, "w"), indent=1)
 
 
