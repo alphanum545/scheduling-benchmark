@@ -8,6 +8,8 @@
 // Table (tbl=):
 //   opcm  OPCM(i,k) = w(i,k) + max_c min_q [OPCM(c,q) + w(c,q) + [q != k] c(i,c)]   (OPPTS, default)
 //   pcm   PCM-style without re-adding the child's cost: w(i,k) + max_c min_q [T(c,q) + [q != k] c(i,c)]
+//   gamma=<g> overrides both: w(i,k) + max_c min_q [T(c,q) + g * w(c,q) + [q != k] c(i,c)]
+//         (g = 0 is the IOCT / PCM-style table, g = 1 is OPCM)
 // Priority (rank=):
 //   mean  mean_k T(i,k) (OPPTS, default)
 //   cv    mean_k T(i,k) * (1 + cv_i), cv_i = std/mean of w(i,.) (heterogeneity-aware)
@@ -25,13 +27,14 @@ typedef long long ll;
 
 int main(int argc, char **argv)
 {
-    string tbl = "opcm", rk = "mean", sel = "ieft"; double beta = 1; bool exitEft = false, fan = false, tie = false, ins = false;
+    string tbl = "opcm", rk = "mean", sel = "ieft"; double beta = 1, gam = -1; bool exitEft = false, fan = false, tie = false, ins = false;
     for (int i = 1; i < argc; i++) {
         string a = argv[i], v = a.substr(a.find('=') + 1);
         if (a.rfind("tbl=", 0) == 0) tbl = v;
         else if (a.rfind("rank=", 0) == 0) rk = v;
         else if (a.rfind("sel=", 0) == 0) sel = v;
         else if (a.rfind("beta=", 0) == 0) beta = atof(v.c_str());
+        else if (a.rfind("gamma=", 0) == 0) gam = atof(v.c_str());
         else if (a.rfind("exit=", 0) == 0) exitEft = v == "1";
         else if (a.rfind("fan=", 0) == 0) fan = v == "1";
         else if (a.rfind("tie=", 0) == 0) tie = v == "1";
@@ -55,14 +58,15 @@ int main(int argc, char **argv)
         for (auto [s, c] : succ[t]) if (--indeg[s] == 0) q.push_back(s); } }
     if ((int)topo.size() != n) { fprintf(stderr, "graph has a cycle\n"); return 3; }
     // table, O(e p) with the min trick
-    vector<vector<ll>> T(n, vector<ll>(p));
-    vector<ll> A(p);
+    if (gam < 0) gam = (tbl == "opcm") ? 1 : 0;
+    vector<vector<double>> T(n, vector<double>(p));
+    vector<double> A(p);
     for (int x = n - 1; x >= 0; x--) {
         int i = topo[x];
-        vector<ll> mx(p, 0);
+        vector<double> mx(p, 0);
         for (auto [c, cc] : succ[i]) {
-            ll mA = LLONG_MAX;
-            for (int q = 0; q < p; q++) { A[q] = T[c][q] + (tbl == "opcm" ? W[c][q] : 0); mA = min(mA, A[q]); }
+            double mA = 1e300;
+            for (int q = 0; q < p; q++) { A[q] = T[c][q] + gam * W[c][q]; mA = min(mA, A[q]); }
             for (int k = 0; k < p; k++) mx[k] = max(mx[k], min(A[k], mA + cc));
         }
         for (int k = 0; k < p; k++) T[i][k] = mx[k] + W[i][k];
