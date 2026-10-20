@@ -468,3 +468,8 @@ enabled = false
 source = "algorithms/makespan/lab3.cpp"
 args = ["auto=5", "lamhi=0.1"]
 enabled = false
+
+[pmms]
+# PMMS, Zhang et al., Journal of Grid Computing 21 (2023) 75.
+# Reproduces the paper's motivational example (Fig. 1, Tables 4 and 5, makespan 161).
+source = "algorithms/makespan/pmms.cpp"
