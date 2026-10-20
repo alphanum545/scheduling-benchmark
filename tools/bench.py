@@ -33,7 +33,9 @@ INDEX = os.path.join(ROOT, "data_index.csv")
 PATH_RE = re.compile(r"(?:^|/)(?P<family>[^/]+)/(?P<nodes>\d+)Nodes/(?P<procs>\d+)PROCESSORS/(?P<inst>\d+)_\d+\.txt$")
 
 FIELDS = ["dataset", "family", "nodes", "n", "p", "instance", "path", "algo", "algo_hash", "status",
-          "makespan", "lb", "seq", "slr", "speedup", "efficiency", "runtime_s", "violations", "first_violation"]
+          "makespan", "lb", "seq", "slr", "speedup", "efficiency", "runtime_s", "violations", "first_violation",
+          "comm_ratio", "imbalance", "utilization", "rob_ratio", "rob_cv"]
+EXTRA = ("comm_ratio", "imbalance", "utilization", "rob_ratio", "rob_cv")  # secondary metrics from evaluate
 INDEX_FIELDS = ["path", "family", "asset", "dataset", "nodes", "n", "p", "instance", "edges", "lb", "seq", "size"]
 VALID = ("ok", "unchecked")
 RETRY = ("missing_file", "check_error")  # infrastructure problems: never treated as done
@@ -285,6 +287,7 @@ def run_group(g, data, algos, tool, tmp):
             mk = c["makespan"]
             row.update(makespan=mk, violations=c["violations"], first_violation=c["first"],
                        status="ok" if c["valid"] else "invalid")
+            row.update({k: c[k] for k in EXTRA if k in c})
         else:  # makespan-only output: the last number printed
             nums = re.findall(r"-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?", open(outf).read())
             os.remove(outf)

@@ -330,3 +330,93 @@ enabled = false
 source = "algorithms/makespan/lab2.cpp"
 args = ["rank=ioct", "base=eft", "lam=const:0.5"]
 enabled = false
+
+# ---------------------------------------------------------------------------
+# Proposed method: BLA-HEFT (clean implementation of c_he50k3; identical schedules).
+# ---------------------------------------------------------------------------
+[bla_heft]
+source = "algorithms/makespan/bla_heft.cpp"
+enabled = false
+
+# --- Ablation of BLA-HEFT (lab2.cpp); reference point lambda = 0.5, R = 3, own = 1, HEFT rank.
+# lambda = 0 is HEFT (b_heft); R = 1, 2, all are c_he50k1, c_he50k2, c_he50.
+
+[x_l25]
+# lambda = 0.25
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.25", "kids=3"]
+enabled = false
+
+[x_l35]
+# lambda = 0.35
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.35", "kids=3"]
+enabled = false
+
+[x_l65]
+# lambda = 0.65
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.65", "kids=3"]
+enabled = false
+
+[x_l75]
+# lambda = 0.75
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.75", "kids=3"]
+enabled = false
+
+[x_l100]
+# lambda = 1: pure state-aware look-ahead (the Lookahead-HEFT idea)
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:1", "kids=3"]
+enabled = false
+
+[x_l100all]
+# lambda = 1 over all children (closest to Lookahead-HEFT)
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:1", "kids=0"]
+enabled = false
+
+[x_k5]
+# R = 5
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.5", "kids=5"]
+enabled = false
+
+[x_o0]
+# no own-cost term in the look-ahead
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.5", "kids=3", "own=0"]
+enabled = false
+
+[x_o5]
+# half own-cost term
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.5", "kids=3", "own=0.5"]
+enabled = false
+
+[x_rio]
+# IOCT-based priority instead of HEFT rank
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=ioct", "base=eft", "lam=const:0.5", "kids=3"]
+enabled = false
+
+[x_static]
+# static look-ahead (EFT + IOCT, AEFT-style) blended instead of plain EFT
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=static", "lam=const:0.5", "kids=3"]
+enabled = false
+
+[x_sw]
+# with AEFT fan-out rule (out-degree > p -> EFT)
+source = "algorithms/makespan/lab2.cpp"
+args = ["rank=heft", "base=eft", "lam=const:0.5", "kids=3", "switch=1"]
+enabled = false
+
+# ---------------------------------------------------------------------------
+# Recent baselines (2025)
+# ---------------------------------------------------------------------------
+[bppts]
+# BPPTS, Wang et al., Future Generation Computer Systems 166 (2025) 107733.
+# Reproduces the paper's worked example (Fig. 1 DAG, makespan 73, Tables 1 and 3).
+source = "algorithms/makespan/bppts.cpp"
