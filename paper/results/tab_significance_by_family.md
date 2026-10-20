@@ -1,0 +1,94 @@
+DSLA vs each baseline per family (Wilcoxon signed-rank, Holm-corrected within the family).
+
+|                            |   n |   mean_gain_pct |   effect_r |    p_holm | significant   |
+|:---------------------------|----:|----------------:|-----------:|----------:|:--------------|
+| ('Montage', 'AEFT')        | 654 |           4.1   |      0.865 | 1.16e-81  | yes, better   |
+| ('Montage', 'HEFT')        | 654 |           7.49  |      0.96  | 3.3e-99   | yes, better   |
+| ('Montage', 'IPPTS')       | 654 |          30.2   |      1     | 7.04e-108 | yes, better   |
+| ('Montage', 'LEFT')        | 654 |           9.28  |      0.967 | 5.67e-99  | yes, better   |
+| ('Montage', 'PMMS')        | 654 |           4.6   |      0.896 | 5.96e-87  | yes, better   |
+| ('Montage', 'PPTS')        | 654 |           7.09  |      0.962 | 1.77e-99  | yes, better   |
+| ('Genome', 'AEFT')         | 600 |           7.23  |      0.828 | 7.63e-69  | yes, better   |
+| ('Genome', 'HEFT')         | 600 |           7.59  |      0.897 | 1.06e-79  | yes, better   |
+| ('Genome', 'IPPTS')        | 600 |          33.2   |      0.996 | 1.86e-98  | yes, better   |
+| ('Genome', 'LEFT')         | 600 |          10.4   |      0.966 | 1.52e-91  | yes, better   |
+| ('Genome', 'PMMS')         | 600 |           7.87  |      0.912 | 2.48e-82  | yes, better   |
+| ('Genome', 'PPTS')         | 600 |           9.48  |      0.845 | 2.24e-71  | yes, better   |
+| ('LIGO', 'AEFT')           | 660 |           7.56  |      0.913 | 5.83e-91  | yes, better   |
+| ('LIGO', 'HEFT')           | 660 |           4.77  |      0.854 | 5.04e-80  | yes, better   |
+| ('LIGO', 'IPPTS')          | 660 |          35.2   |      0.999 | 8.29e-109 | yes, better   |
+| ('LIGO', 'LEFT')           | 660 |           7.65  |      0.926 | 7.79e-93  | yes, better   |
+| ('LIGO', 'PMMS')           | 660 |           7.39  |      0.868 | 2.88e-82  | yes, better   |
+| ('LIGO', 'PPTS')           | 660 |          11.3   |      0.92  | 5e-92     | yes, better   |
+| ('FFT', 'AEFT')            |  60 |           2.29  |      0.557 | 0.000174  | yes, better   |
+| ('FFT', 'HEFT')            |  60 |           5.04  |      0.956 | 4.73e-10  | yes, better   |
+| ('FFT', 'IPPTS')           |  60 |          21.6   |      1     | 9.78e-11  | yes, better   |
+| ('FFT', 'LEFT')            |  60 |           7.01  |      0.987 | 4.61e-10  | yes, better   |
+| ('FFT', 'PMMS')            |  60 |           3.65  |      0.85  | 2.04e-08  | yes, better   |
+| ('FFT', 'PPTS')            |  60 |           4.55  |      0.886 | 9.8e-09   | yes, better   |
+| ('GE', 'AEFT')             |  60 |           2.38  |      0.514 | 0.00165   | yes, better   |
+| ('GE', 'HEFT')             |  60 |           9.68  |      0.99  | 4.72e-10  | yes, better   |
+| ('GE', 'IPPTS')            |  60 |           7.32  |      0.716 | 5.12e-06  | yes, better   |
+| ('GE', 'LEFT')             |  60 |          12.7   |      0.991 | 5.51e-10  | yes, better   |
+| ('GE', 'PMMS')             |  60 |           4.42  |      0.82  | 2.24e-07  | yes, better   |
+| ('GE', 'PPTS')             |  60 |           1.56  |      0.255 | 0.088     | no            |
+| ('LA', 'AEFT')             |  60 |           3.3   |      0.585 | 0.000185  | yes, better   |
+| ('LA', 'HEFT')             |  60 |           7.03  |      0.943 | 3.21e-09  | yes, better   |
+| ('LA', 'IPPTS')            |  60 |           8.95  |      0.734 | 3.71e-06  | yes, better   |
+| ('LA', 'LEFT')             |  60 |           8.3   |      0.962 | 3.21e-09  | yes, better   |
+| ('LA', 'PMMS')             |  60 |           3.48  |      0.62  | 8.98e-05  | yes, better   |
+| ('LA', 'PPTS')             |  60 |           2.27  |      0.415 | 0.00515   | yes, better   |
+| ('R-ccr0.1-b0.1', 'AEFT')  |  80 |           0.084 |      0.284 | 0.0587    | no            |
+| ('R-ccr0.1-b0.1', 'HEFT')  |  80 |           0.546 |      0.944 | 1.27e-12  | yes, better   |
+| ('R-ccr0.1-b0.1', 'IPPTS') |  80 |          11     |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr0.1-b0.1', 'LEFT')  |  80 |           8.03  |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr0.1-b0.1', 'PMMS')  |  80 |           0.168 |      0.53  | 0.000161  | yes, better   |
+| ('R-ccr0.1-b0.1', 'PPTS')  |  80 |           0.048 |      0.016 | 0.903     | no            |
+| ('R-ccr0.1-b0.5', 'AEFT')  |  80 |           0.355 |      0.355 | 0.00892   | yes, better   |
+| ('R-ccr0.1-b0.5', 'HEFT')  |  80 |           0.719 |      0.86  | 3.95e-10  | yes, better   |
+| ('R-ccr0.1-b0.5', 'IPPTS') |  80 |          19.1   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr0.1-b0.5', 'LEFT')  |  80 |           9.09  |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr0.1-b0.5', 'PMMS')  |  80 |           0.433 |      0.641 | 2.39e-06  | yes, better   |
+| ('R-ccr0.1-b0.5', 'PPTS')  |  80 |           0.807 |      0.717 | 7.71e-08  | yes, better   |
+| ('R-ccr0.1-b1', 'AEFT')    |  80 |           1.61  |      0.736 | 6.14e-08  | yes, better   |
+| ('R-ccr0.1-b1', 'HEFT')    |  80 |           1.11  |      0.707 | 6.69e-07  | yes, better   |
+| ('R-ccr0.1-b1', 'IPPTS')   |  80 |          33.9   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr0.1-b1', 'LEFT')    |  80 |          11.5   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr0.1-b1', 'PMMS')    |  80 |           1.04  |      0.638 | 1.59e-06  | yes, better   |
+| ('R-ccr0.1-b1', 'PPTS')    |  80 |           1.98  |      0.904 | 8.76e-12  | yes, better   |
+| ('R-ccr1-b0.1', 'AEFT')    |  80 |           2.66  |      0.816 | 7.13e-10  | yes, better   |
+| ('R-ccr1-b0.1', 'HEFT')    |  80 |           0.182 |      0.131 | 0.307     | no            |
+| ('R-ccr1-b0.1', 'IPPTS')   |  80 |           9.64  |      0.981 | 1.26e-13  | yes, better   |
+| ('R-ccr1-b0.1', 'LEFT')    |  80 |           5.72  |      0.998 | 5.28e-14  | yes, better   |
+| ('R-ccr1-b0.1', 'PMMS')    |  80 |           2.78  |      0.821 | 7.13e-10  | yes, better   |
+| ('R-ccr1-b0.1', 'PPTS')    |  80 |           1.66  |      0.753 | 1.21e-08  | yes, better   |
+| ('R-ccr1-b0.5', 'AEFT')    |  80 |           3.4   |      0.882 | 2.87e-11  | yes, better   |
+| ('R-ccr1-b0.5', 'HEFT')    |  80 |           1.06  |      0.589 | 4.75e-06  | yes, better   |
+| ('R-ccr1-b0.5', 'IPPTS')   |  80 |          12.6   |      0.996 | 4.92e-14  | yes, better   |
+| ('R-ccr1-b0.5', 'LEFT')    |  80 |           5.23  |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr1-b0.5', 'PMMS')    |  80 |           2.96  |      0.876 | 3.01e-11  | yes, better   |
+| ('R-ccr1-b0.5', 'PPTS')    |  80 |           2.53  |      0.869 | 3.01e-11  | yes, better   |
+| ('R-ccr1-b1', 'AEFT')      |  80 |           4.37  |      0.969 | 1.46e-13  | yes, better   |
+| ('R-ccr1-b1', 'HEFT')      |  80 |           2.15  |      0.912 | 1.35e-12  | yes, better   |
+| ('R-ccr1-b1', 'IPPTS')     |  80 |          16.9   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr1-b1', 'LEFT')      |  80 |           5.83  |      0.999 | 5.31e-14  | yes, better   |
+| ('R-ccr1-b1', 'PMMS')      |  80 |           3.99  |      0.995 | 5.31e-14  | yes, better   |
+| ('R-ccr1-b1', 'PPTS')      |  80 |           4.1   |      0.991 | 5.31e-14  | yes, better   |
+| ('R-ccr10-b0.1', 'AEFT')   |  80 |          19.4   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr10-b0.1', 'HEFT')   |  80 |          14.6   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr10-b0.1', 'IPPTS')  |  80 |          19.7   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr10-b0.1', 'LEFT')   |  80 |           3.01  |      0.714 | 2.87e-08  | yes, better   |
+| ('R-ccr10-b0.1', 'PMMS')   |  80 |          19.1   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr10-b0.1', 'PPTS')   |  80 |          18.5   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr10-b0.5', 'AEFT')   |  80 |          18.7   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr10-b0.5', 'HEFT')   |  80 |          14.5   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr10-b0.5', 'IPPTS')  |  80 |          18.9   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr10-b0.5', 'LEFT')   |  80 |           3.24  |      0.679 | 1.32e-07  | yes, better   |
+| ('R-ccr10-b0.5', 'PMMS')   |  80 |          18.9   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr10-b0.5', 'PPTS')   |  80 |          18.1   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr10-b1', 'AEFT')     |  80 |          17.4   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr10-b1', 'HEFT')     |  80 |          13.8   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr10-b1', 'IPPTS')    |  80 |          18.7   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr10-b1', 'LEFT')     |  80 |           3.34  |      0.719 | 2.37e-08  | yes, better   |
+| ('R-ccr10-b1', 'PMMS')     |  80 |          17.5   |      1     | 4.71e-14  | yes, better   |
+| ('R-ccr10-b1', 'PPTS')     |  80 |          16.8   |      1     | 4.71e-14  | yes, better   |
