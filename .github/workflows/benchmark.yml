@@ -25,6 +25,9 @@ on:
       procs:
         description: "Processor counts, e.g. 2,4,8 (or all)"
         default: "all"
+      split:
+        description: "Instances: all, dev (about 1/4, for designing algorithms) or test (held-out rest)"
+        default: "all"
       report_name:
         description: "Report folder name under results/reports/"
         default: "latest"
@@ -60,7 +63,7 @@ jobs:
           python3 tools/bench.py plan \
             --algos "${{ inputs.algos }}" --families "${{ inputs.families }}" \
             --datasets "${{ inputs.datasets }}" --nodes "${{ inputs.nodes }}" --procs "${{ inputs.procs }}" \
-            --shards "${{ inputs.shards }}" ${{ inputs.force && '--force' || '' }} \
+            --split "${{ inputs.split }}" --shards "${{ inputs.shards }}" ${{ inputs.force && '--force' || '' }} \
             --github-output "$GITHUB_OUTPUT" | tee plan.log
           { echo "## Plan"; echo '```'; cat plan.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
@@ -129,7 +132,7 @@ jobs:
         run: |
           python3 tools/report.py --algos "${{ inputs.algos }}" --highlight "${{ inputs.highlight }}" \
             --families "${{ inputs.families }}" --datasets "${{ inputs.datasets }}" \
-            --nodes "${{ inputs.nodes }}" --procs "${{ inputs.procs }}" --name "${{ inputs.report_name }}"
+            --nodes "${{ inputs.nodes }}" --procs "${{ inputs.procs }}" --split "${{ inputs.split }}" --name "${{ inputs.report_name }}"
           cat "results/reports/${{ inputs.report_name }}/summary.md" >> "$GITHUB_STEP_SUMMARY"
       - name: Commit results
         run: |
