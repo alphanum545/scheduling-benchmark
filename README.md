@@ -50,6 +50,7 @@ file, and commits `data_index.csv`. Rerun it whenever you change the archives on
 | nodes | `all` or `50,100,1000` | task counts (from the `<N>Nodes` folder names) |
 | procs | `all` or `2,4,8` | processor counts |
 | report_name | `oppts-vs-baselines` | folder name for this report |
+| split | `all`, `dev`, `test` | `dev` ≈ 1 instance in 4, for designing and tuning; `test` = the held-out rest, for the final comparison only |
 | shards | `20` | parallel machines (20 is the free-plan maximum) |
 | force | off | rerun everything, ignoring stored results |
 
@@ -131,12 +132,18 @@ without rerunning anything (run Benchmark again with the same selection; nothing
 ---
 
 ## Random DAGs (CCR / heterogeneity experiments)
-`tools/generate.py` writes random layered DAGs in the same format and folder layout:
-```
-python3 tools/generate.py --out RAND --nodes 100,200 --procs 4,8,16 --ccr 0.1,1,10 --beta 0.1,0.5,1 --count 10
-```
-Each (CCR, β) pair becomes a family (`R-ccr1-b0.5`, ...). Zip the families, attach them to the
-`data` release, rerun **Prepare data**, and they can be selected like any other family.
+`tools/generate.py` writes random layered DAGs in the same format and folder layout.
+`tools/generated.json` lists generated datasets; they are **not uploaded**: every machine rebuilds
+identical files from the fixed seed (Prepare data indexes them, Benchmark shards rebuild only the
+families they need). The current set, `gen:random-v1`, has 9 families `R-ccr<C>-b<B>`
+(CCR 0.1, 1, 10 × heterogeneity β 0.1, 0.5, 1), each with 100/300/500/1000 tasks on 4/8/16/32
+processors, 5 graphs per size (720 instances). To add more, add an entry to `generated.json`
+(use a new name, e.g. `gen:random-v2`, so the old files stay reproducible) and rerun Prepare data.
+
+## Development / test split
+Every instance is permanently assigned to `dev` (about 1 in 4) or `test` by a hash of its path
+(`split_of` in `tools/bench.py`). Design and tune algorithms with `split = dev`; run `test` only
+for the final comparison, so the reported gains are not tuned to the reported instances.
 
 ## Running locally (optional)
 Needs Python 3.11+ and g++ (plus `pandas matplotlib openpyxl tabulate` for reports).
