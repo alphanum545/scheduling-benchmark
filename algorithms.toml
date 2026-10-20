@@ -473,3 +473,18 @@ enabled = false
 # PMMS, Zhang et al., Journal of Grid Computing 21 (2023) 75.
 # Reproduces the paper's motivational example (Fig. 1, Tables 4 and 5, makespan 161).
 source = "algorithms/makespan/pmms.cpp"
+
+# ---------------------------------------------------------------------------
+# Proposed method, clean implementation (final names).
+# dsla must equal z_best10 and slas must equal bla_heft on every instance.
+# ---------------------------------------------------------------------------
+[dsla]
+# DSLA: Dual-policy State-aware Look-Ahead scheduling
+source = "algorithms/makespan/dsla.cpp"
+enabled = false
+
+[slas]
+# SLAS: State-aware Look-Ahead Scheduling (DSLA's first schedule only)
+source = "algorithms/makespan/dsla.cpp"
+args = ["slas"]
+enabled = false
