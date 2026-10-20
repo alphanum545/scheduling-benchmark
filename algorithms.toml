@@ -431,3 +431,40 @@ source = "algorithms/makespan/left.cpp"
 source = "algorithms/makespan/left.cpp"
 args = ["dup"]
 duplication = true
+
+# ---------------------------------------------------------------------------
+# Round 4 (lab3.cpp): BLA-HEFT plus a communication-aware task-selection mode
+# (pick the ready task that can finish first), for communication-heavy graphs.
+# ---------------------------------------------------------------------------
+[z_e10]
+# eft mode only, lambda 0.1
+source = "algorithms/makespan/lab3.cpp"
+args = ["order=eft", "lam=0.1"]
+enabled = false
+
+[z_best10]
+# both schedules (rank/0.5 and eft/0.1), keep the shorter
+source = "algorithms/makespan/lab3.cpp"
+args = ["best=1", "lamhi=0.1"]
+enabled = false
+
+[z_best25]
+source = "algorithms/makespan/lab3.cpp"
+args = ["best=1", "lamhi=0.25"]
+enabled = false
+
+[z_auto2]
+# graph CCR >= 2 -> eft mode with lambda 0.1, else BLA-HEFT
+source = "algorithms/makespan/lab3.cpp"
+args = ["auto=2", "lamhi=0.1"]
+enabled = false
+
+[z_auto3]
+source = "algorithms/makespan/lab3.cpp"
+args = ["auto=3", "lamhi=0.1"]
+enabled = false
+
+[z_auto5]
+source = "algorithms/makespan/lab3.cpp"
+args = ["auto=5", "lamhi=0.1"]
+enabled = false
