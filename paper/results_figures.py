@@ -15,6 +15,7 @@ Output: paper/results/
   tab_average_makespan.{md,csv,tex}         average makespan per family (+ workflows, random, all)
   tab_efficiency_by_p.{md,csv}              efficiency per processor count, DSLA and the baselines' mean
   tab_gain_by_characteristics.{md,csv}      DSLA's gain over the best baseline per CCR, beta, size and p
+  tab_significance.md, tab_significance_by_family.md   Wilcoxon + Friedman / Nemenyi for this set
   tab_runtime.{md,csv}                      mean wall time per run (s) per task count, random graphs; includes
                                             process start and reading the n x n input, so it is not a fair
                                             comparison of the scheduling work itself
@@ -33,10 +34,11 @@ ROOT = os.path.dirname(HERE)
 SRC = os.path.join(ROOT, "results", "reports", "full-contention", "results.csv")
 OUT = os.path.join(HERE, "results")
 
-# benchmark id -> paper name; DSLA first, then baselines by publication year
-NAMES = {"dsla": "DSLA", "heft": "HEFT", "peft": "PEFT", "ipeft": "IPEFT", "ppts": "PPTS", "lstd": "LSTD",
-         "ippts": "IPPTS", "mpeft": "MPEFT", "pmms": "PMMS", "aeft": "AEFT", "bppts": "BPPTS",
-         "left": "LEFT", "left_d": "LEFT-D", "oppts": "OPPTS"}
+# benchmark id -> paper name: DSLA and the six baselines compared in the paper. The other algorithms in
+# the benchmark (PEFT, IPEFT, MPEFT, LSTD, BPPTS, LEFT-D, OPPTS) are discussed in the related work only;
+# add them here to include them in the figures and tables.
+NAMES = {"dsla": "DSLA", "heft": "HEFT", "ppts": "PPTS", "ippts": "IPPTS", "pmms": "PMMS", "aeft": "AEFT",
+         "left": "LEFT"}
 ALIAS = {"z_best10": "dsla"}       # the benchmark run used DSLA's lab id (identical schedules)
 WORKFLOWS = ["Montage", "Genome", "LIGO", "FFT", "GE", "LA"]
 CCRS = ["0.1", "1", "10"]
@@ -199,7 +201,7 @@ def characteristics(d, names):
                          "strongest baseline": strongest,
                          "mean gain vs strongest %": gain.mean(),
                          "DSLA shorter vs strongest %": 100 * (gain > 0).mean(),
-                         "mean gain vs per-instance best of 13 %": s.vgain.mean()})
+                         f"mean gain vs per-instance best of {len(names) - 1} %": s.vgain.mean()})
     t = pd.DataFrame(rows).set_index(["characteristic", "value"])
     write(t, "tab_gain_by_characteristics", tex=False)
     return t
@@ -224,9 +226,26 @@ def gain_by_ccr(d, names):
     ax.set_xticks(range(len(base)), base, rotation=35, ha="right")
     ax.set_ylabel("Mean makespan reduction of DSLA (%)")
     ax.grid(axis="x", visible=False)
-    ax.legend(ncol=3, fontsize=8, loc="upper left")
+    ax.legend(ncol=3, fontsize=8, loc="upper left", frameon=False)
     fig.tight_layout()
     save(fig, "fig_gain_by_ccr")
+
+
+def significance(d, names):
+    """Wilcoxon (DSLA vs each baseline, Holm-corrected, also per DAG) and Friedman / Nemenyi."""
+    import sys
+    sys.path.insert(0, os.path.join(ROOT, "tools"))
+    from stats import significance_tables
+    c = d.assign(algo=d.name)
+    sig = significance_tables(c, names, "DSLA")
+    open(os.path.join(OUT, "tab_significance.md"), "w").write(sig["_markdown"] + "\n")
+    if "Wilcoxon_by_family" in sig:
+        f = sig["Wilcoxon_by_family"].reset_index()
+        f["family"] = pd.Categorical(f.family, WORKFLOWS + sorted(x for x in f.family.unique() if x not in WORKFLOWS))
+        f = f.sort_values(["family", "versus"]).set_index(["family", "versus"])
+        open(os.path.join(OUT, "tab_significance_by_family.md"), "w").write(
+            "DSLA vs each baseline per family (Wilcoxon signed-rank, Holm-corrected within the family).\n\n"
+            + f.to_markdown(floatfmt=".3g") + "\n")
 
 
 def main():
@@ -241,6 +260,7 @@ def main():
     characteristics(d, names)
     runtime(d, names)
     gain_by_ccr(d, names)
+    significance(d, names)
     print("written to", os.path.relpath(OUT, ROOT))
 
 
