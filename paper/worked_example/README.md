@@ -4,14 +4,15 @@ Files: `example.d3`, `example2.d3`, `topcuoglu.d3`, `topcuoglu_variant.d3` (inpu
 (`gantt_example*.pdf`, `gantt_topcuoglu_variant.pdf`, `dag_topcuoglu_variant.pdf`) are rebuilt with
 `python3 paper/make_figures.py`.
 
-Names: DSLA is the proposed method; SLAS is its first (rank-order) schedule alone, formerly called BLA-HEFT.
+Baselines: the paper compares DSLA with HEFT, PPTS, IPPTS, PMMS, AEFT and LEFT; the makespans below are for
+those six. Names: DSLA is the proposed method; SLAS is its first (rank-order) schedule alone, formerly called BLA-HEFT.
 Example 1 shows the state-aware look-ahead (it is decided by SLAS); example 2 shows why DSLA also builds the
 earliest-finish-order schedule.
 
 ## Example 1: the state-aware look-ahead (6 tasks, 2 processors)
 
 Found by a random search over small layered DAGs (6-8 tasks, 2-3 processors) for the simplest
-instance on which SLAS beats HEFT, AEFT and OPPTS and differs from HEFT in a single
+instance on which SLAS beats HEFT, AEFT and PMMS and differs from HEFT in a single
 processor choice. It is an illustration of the mechanism, not evidence of performance (that is
 the benchmark).
 
@@ -28,7 +29,9 @@ Computation costs W(t, P1), W(t, P2):
 
 Edges (communication cost): T1->T2 16, T1->T3 8, T1->T4 11, T2->T5 16, T3->T6 11, T4->T6 15, T5->T6 16.
 
-Makespans (all schedules validated): **SLAS 54** (DSLA also 54: its second schedule is not shorter), AEFT 58, OPPTS 58, HEFT 62.
+Makespans (all schedules validated): **SLAS 54** (DSLA also 54: its second schedule is not shorter), LEFT 54,
+AEFT 58, PMMS 58, PPTS 58, IPPTS 60, HEFT 62. LEFT ties here; the example is about the look-ahead against
+HEFT and AEFT.
 
 SLAS step by step (scheduling order T1, T2, T5, T4, T3, T6; lambda = 0.5, R = 3):
 
@@ -71,7 +74,7 @@ Computation costs W(t, P1), W(t, P2):
 
 Edges (communication cost): T1->T2 15, T1->T3 8, T1->T4 21, T2->T5 24, T3->T5 27, T4->T5 25.
 
-Makespans (all schedules validated): **DSLA 67**, HEFT 70, LEFT-D 72, SLAS 75, OPPTS 75, PMMS 75, LEFT 82, AEFT 87.
+Makespans (all schedules validated): **DSLA 67**, HEFT 70, SLAS 75, PPTS 75, IPPTS 75, PMMS 75, LEFT 82, AEFT 87.
 
 | Schedule | Order | Placement | Makespan |
 |---|---|---|---|
@@ -95,9 +98,10 @@ Story for the text:
 
 ## The classic 10-task graph (Topcuoglu et al., 2002), for completeness
 
-Non-insertion makespans: OPPTS 74, **DSLA 76**, AEFT 76, HEFT 80, SLAS 80, PEFT 85, IPPTS 96.
-DSLA's second schedule improves on SLAS and HEFT here (76 against 80), but OPPTS is shorter on this single
-graph. Report it honestly if the classic graph is shown; a single instance says nothing about average
+Non-insertion makespans: PMMS 73, **DSLA 76**, AEFT 76, LEFT 76, HEFT 80, PPTS 80, SLAS 80, IPPTS 96.
+DSLA's second schedule improves on SLAS and HEFT here (76 against 80), but PMMS is shorter on this single
+graph. This is why the paper uses the same structure with new costs (below) as its main example. If the
+classic graph is shown as well, report this honestly; a single instance says nothing about average
 performance.
 
 ## Recommended main example: the classic graph's structure with new costs (`topcuoglu_variant.d3`)
@@ -130,17 +134,16 @@ T3->T7 19, T4->T8 14, T4->T9 13, T5->T9 19, T6->T8 22, T7->T10 16, T8->T10 22, T
 
 Makespans (non-insertion, every schedule validated):
 
-| Algorithm | Makespan | | Algorithm | Makespan |
-|---|---|---|---|---|
-| **DSLA** | **72** | | HEFT | 90 |
-| SLAS (DSLA's rank-order schedule) | 77 | | LEFT-D | 89 |
-| LSTD | 82 | | IPPTS | 92 |
-| LEFT | 83 | | MPEFT | 92 |
-| BPPTS | 85 | | AEFT | 94 |
-| IPEFT | 86 | | PMMS | 94 |
-| | | | PPTS | 96 |
-| | | | OPPTS | 102 |
-| | | | PEFT | 104 |
+| Algorithm | Makespan |
+|---|---|
+| **DSLA** | **72** |
+| SLAS (DSLA's rank-order schedule) | 77 |
+| LEFT | 83 |
+| HEFT | 90 |
+| IPPTS | 92 |
+| AEFT | 94 |
+| PMMS | 94 |
+| PPTS | 96 |
 
 DSLA's two schedules:
 
@@ -173,7 +176,7 @@ Story for the text:
    its look-ahead sees that T1's most critical children can then run on P1 with no messages: T5 costs
    only 5 on P1, and T5 is the next task in rank order. HEFT's schedule ends with T10 on P1 waiting for
    T9's 27-unit message (start 85, makespan 90). SLAS places T9, T8 and T10 together on P2 and finishes
-   at 77, ahead of every baseline (the best is LSTD with 82).
+   at 77, ahead of every baseline (the best is LEFT with 83).
 2. **The second schedule (DSLA 72 vs SLAS 77).** The rank order takes the high-rank T5 and T4 first, so
    the three short tasks T6, T3 and T2 are scheduled only afterwards and spread over P2 and P3. The
    earliest-finish order instead runs them straight after T1 on P3 (finishing at 19, 27 and 35), with no

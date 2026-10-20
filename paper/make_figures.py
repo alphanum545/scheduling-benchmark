@@ -3,8 +3,8 @@
 
   python3 paper/make_figures.py
 
-worked_example/gantt_example.{png,pdf}   Gantt charts of HEFT, AEFT, OPPTS and SLAS on example.d3
-worked_example/gantt_example2.{png,pdf}  Gantt charts of HEFT, LEFT-D, SLAS and DSLA on example2.d3
+worked_example/gantt_example.{png,pdf}   Gantt charts of HEFT, AEFT, PMMS and SLAS on example.d3
+worked_example/gantt_example2.{png,pdf}  Gantt charts of HEFT, LEFT, SLAS and DSLA on example2.d3
                                           (the algorithms are compiled and run here)
 worked_example/gantt_topcuoglu_variant.{png,pdf}, dag_topcuoglu_variant.{png,pdf}
                                          the classic 10-task graph with new costs: Gantt charts and the DAG
@@ -138,13 +138,13 @@ def scaling():
 
 if __name__ == "__main__":
     gantt("example.d3", "gantt_example",
-          [("heft", [], "HEFT"), ("aeft", [], "AEFT"), ("oppts", [], "OPPTS"),
+          [("heft", [], "HEFT"), ("aeft", [], "AEFT"), ("pmms", [], "PMMS"),
            ("dsla", ["slas"], "SLAS (DSLA's rank-order schedule)")], focus=2)
     gantt("example2.d3", "gantt_example2",
-          [("heft", [], "HEFT"), ("left", ["dup"], "LEFT-D"), ("dsla", ["slas"], "SLAS (DSLA's rank-order schedule)"),
+          [("heft", [], "HEFT"), ("left", [], "LEFT"), ("dsla", ["slas"], "SLAS (DSLA's rank-order schedule)"),
            ("dsla", [], "DSLA (keeps its earliest-finish-order schedule)")], focus=3)
     gantt("topcuoglu_variant.d3", "gantt_topcuoglu_variant",
-          [("heft", [], "HEFT"), ("lstd", [], "LSTD (best baseline here)"),
+          [("heft", [], "HEFT"), ("left", [], "LEFT (best baseline here)"),
            ("dsla", ["slas"], "SLAS (DSLA's rank-order schedule)"),
            ("dsla", [], "DSLA (keeps its earliest-finish-order schedule)")], focus=1)
     dag("topcuoglu_variant.d3", "dag_topcuoglu_variant")
