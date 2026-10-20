@@ -34,8 +34,8 @@ PATH_RE = re.compile(r"(?:^|/)(?P<family>[^/]+)/(?P<nodes>\d+)Nodes/(?P<procs>\d
 
 FIELDS = ["dataset", "family", "nodes", "n", "p", "instance", "path", "algo", "algo_hash", "status",
           "makespan", "lb", "seq", "slr", "speedup", "efficiency", "runtime_s", "violations", "first_violation",
-          "comm_ratio", "imbalance", "utilization", "rob_ratio", "rob_cv"]
-EXTRA = ("comm_ratio", "imbalance", "utilization", "rob_ratio", "rob_cv")  # secondary metrics from evaluate
+          "comm_ratio", "imbalance", "utilization", "rob_ratio", "rob_cv", "cont_mk", "cont_ratio"]
+EXTRA = ("comm_ratio", "imbalance", "utilization", "rob_ratio", "rob_cv", "cont_mk", "cont_ratio")  # secondary metrics from evaluate
 INDEX_FIELDS = ["path", "family", "asset", "dataset", "nodes", "n", "p", "instance", "edges", "lb", "seq", "size"]
 VALID = ("ok", "unchecked")
 RETRY = ("missing_file", "check_error")  # infrastructure problems: never treated as done

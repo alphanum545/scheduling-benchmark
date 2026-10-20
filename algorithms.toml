@@ -420,3 +420,71 @@ enabled = false
 # BPPTS, Wang et al., Future Generation Computer Systems 166 (2025) 107733.
 # Reproduces the paper's worked example (Fig. 1 DAG, makespan 73, Tables 1 and 3).
 source = "algorithms/makespan/bppts.cpp"
+
+[left]
+# LEFT, Naik and Ansari, Cluster Computing 28 (2025) 844.
+# Reproduces the paper's worked example (Fig. 1 DAG, Table 4, makespan 76).
+source = "algorithms/makespan/left.cpp"
+
+[left_d]
+# LEFT-D (entry-task duplication), same paper. Reproduces Table 5 (makespan 73).
+source = "algorithms/makespan/left.cpp"
+args = ["dup"]
+duplication = true
+
+# ---------------------------------------------------------------------------
+# Round 4 (lab3.cpp): BLA-HEFT plus a communication-aware task-selection mode
+# (pick the ready task that can finish first), for communication-heavy graphs.
+# ---------------------------------------------------------------------------
+[z_e10]
+# eft mode only, lambda 0.1
+source = "algorithms/makespan/lab3.cpp"
+args = ["order=eft", "lam=0.1"]
+enabled = false
+
+[z_best10]
+# both schedules (rank/0.5 and eft/0.1), keep the shorter
+source = "algorithms/makespan/lab3.cpp"
+args = ["best=1", "lamhi=0.1"]
+enabled = false
+
+[z_best25]
+source = "algorithms/makespan/lab3.cpp"
+args = ["best=1", "lamhi=0.25"]
+enabled = false
+
+[z_auto2]
+# graph CCR >= 2 -> eft mode with lambda 0.1, else BLA-HEFT
+source = "algorithms/makespan/lab3.cpp"
+args = ["auto=2", "lamhi=0.1"]
+enabled = false
+
+[z_auto3]
+source = "algorithms/makespan/lab3.cpp"
+args = ["auto=3", "lamhi=0.1"]
+enabled = false
+
+[z_auto5]
+source = "algorithms/makespan/lab3.cpp"
+args = ["auto=5", "lamhi=0.1"]
+enabled = false
+
+[pmms]
+# PMMS, Zhang et al., Journal of Grid Computing 21 (2023) 75.
+# Reproduces the paper's motivational example (Fig. 1, Tables 4 and 5, makespan 161).
+source = "algorithms/makespan/pmms.cpp"
+
+# ---------------------------------------------------------------------------
+# Proposed method, clean implementation (final names).
+# dsla must equal z_best10 and slas must equal bla_heft on every instance.
+# ---------------------------------------------------------------------------
+[dsla]
+# DSLA: Dual-policy State-aware Look-Ahead scheduling
+source = "algorithms/makespan/dsla.cpp"
+enabled = false
+
+[slas]
+# SLAS: State-aware Look-Ahead Scheduling (DSLA's first schedule only)
+source = "algorithms/makespan/dsla.cpp"
+args = ["slas"]
+enabled = false

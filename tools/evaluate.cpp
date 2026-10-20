@@ -22,6 +22,9 @@
 //                         the random factors depend only on the instance, so all algorithms see
 //                         the same perturbations (paired comparison).
 //         rob_cv          coefficient of variation of the replayed makespans
+//         cont_mk         makespan of the same schedule replayed under network contention (one-port model:
+//                         one outgoing and one incoming message per processor at a time; see below)
+//         cont_ratio      cont_mk / makespan
 //
 // Build: g++ -O2 -std=c++17 -o evaluate evaluate.cpp
 #include <cstdio>
@@ -34,6 +37,7 @@
 #include <sstream>
 #include <iostream>
 #include <cmath>
+#include <climits>
 using namespace std;
 typedef long long ll;
 
@@ -216,9 +220,50 @@ static int cmdCheck(const char *inst, const char *sched, bool dupEntry) {
     }
     double mean = 0; for (double x : mks) mean += x; mean /= RUNS;
     double var = 0; for (double x : mks) var += (x - mean) * (x - mean); var /= RUNS;
+    // contention replay (one-port, full-duplex): each processor sends at most one message and receives at
+    // most one message at a time; a message occupies the sender's out-port and the receiver's in-port for
+    // its whole cost. The replay keeps the mapping and each processor's task order (same order as above).
+    // Tasks are replayed in that order; a task's incoming messages are booked in order of the senders'
+    // finish times, each in the earliest interval where both ports are idle (idle gaps are reused).
+    // Intra-processor data and zero-cost edges use no port.
+    typedef vector<pair<ll, ll>> Busy;                       // sorted, disjoint [start, end)
+    vector<Busy> outB(I.p), inB(I.p);
+    auto conflict = [](const Busy &b, ll t, ll c) -> ll {    // end of the first interval overlapping [t, t+c), or -1
+        auto it = lower_bound(b.begin(), b.end(), make_pair(t, LLONG_MIN));
+        if (it != b.begin() && prev(it)->second > t) return prev(it)->second;
+        if (it != b.end() && it->first < t + c) return it->second;
+        return -1;
+    };
+    auto book = [](Busy &b, ll s, ll e) { b.insert(lower_bound(b.begin(), b.end(), make_pair(s, e)), {s, e}); };
+    vector<ll> f3(I.n, 0);
+    vector<pair<ll, int>> inc;
+    for (int v : ord) {
+        int q = pr[v]; ll t0 = prevOn[v] >= 0 ? f3[prevOn[v]] : 0;
+        inc.clear();
+        for (size_t k = 0; k < I.pred[v].size(); k++) {
+            int u = I.pred[v][k].first;
+            if (pr[u] == q) t0 = max(t0, f3[u]); else inc.push_back({f3[u], (int)k});
+        }
+        sort(inc.begin(), inc.end());
+        for (auto &m : inc) {
+            int u = I.pred[v][m.second].first; ll c = I.pred[v][m.second].second, fu = m.first;
+            if (dupEntry && I.pred[u].empty() && I.comp[u][q] <= fu + c) { t0 = max(t0, I.comp[u][q]); continue; }
+            if (c <= 0) { t0 = max(t0, fu); continue; }
+            ll t = fu;
+            for (;;) {
+                ll a = conflict(outB[pr[u]], t, c); if (a >= 0) { t = a; continue; }
+                ll b = conflict(inB[q], t, c);      if (b >= 0) { t = b; continue; }
+                break;
+            }
+            book(outB[pr[u]], t, t + c); book(inB[q], t, t + c); t0 = max(t0, t + c);
+        }
+        f3[v] = t0 + I.comp[v][q];
+    }
+    ll cmk = *max_element(f3.begin(), f3.end());
     printf("{\"makespan\":%lld,\"valid\":1,\"violations\":0,\"first\":\"\",\"comm_ratio\":%.6f,\"imbalance\":%.6f,"
-           "\"utilization\":%.6f,\"rob_ratio\":%.6f,\"rob_cv\":%.6f}\n",
-           mk, commAll > 0 ? commPaid / commAll : 0.0, imbalance, util, mean / mk, mean > 0 ? sqrt(var) / mean : 0.0);
+           "\"utilization\":%.6f,\"rob_ratio\":%.6f,\"rob_cv\":%.6f,\"cont_mk\":%lld,\"cont_ratio\":%.6f}\n",
+           mk, commAll > 0 ? commPaid / commAll : 0.0, imbalance, util, mean / mk, mean > 0 ? sqrt(var) / mean : 0.0,
+           cmk, (double)cmk / mk);
     return 0;
 }
 

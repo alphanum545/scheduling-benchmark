@@ -195,7 +195,7 @@ def main():
     pw = pairwise(c, names)
     runtime = df.groupby(["algo", "nodes"]).runtime_s.mean().unstack().reindex(names).round(4)
     cols = ["makespan", "slr", "speedup", "efficiency", "runtime_s"]
-    extra = [k for k in ("comm_ratio", "imbalance", "utilization", "rob_ratio", "rob_cv")
+    extra = [k for k in ("comm_ratio", "imbalance", "utilization", "rob_ratio", "rob_cv", "cont_mk", "cont_ratio")
              if k in c and c.groupby("algo")[k].count().reindex(names).fillna(0).min() == c.groupby("algo").size().reindex(names).min()]
     overall = c.groupby("algo")[cols].mean().reindex(names).round(4)
     secondary = c.groupby("algo")[extra].mean().reindex(names).round(4) if extra else None
@@ -241,7 +241,8 @@ def main():
         md += ["## Secondary metrics (means over the compared instances)",
                "comm_ratio = communication paid / total; imbalance = max / mean processor busy time; "
                "utilization = busy / (p x makespan); rob_ratio = mean makespan under +-20% cost noise / makespan; "
-               "rob_cv = coefficient of variation of the perturbed makespans.", "", secondary.to_markdown(), ""]
+               "rob_cv = coefficient of variation of the perturbed makespans; cont_mk = makespan of the schedule replayed "
+               "under network contention (one-port model), cont_ratio = cont_mk / makespan.", "", secondary.to_markdown(), ""]
     if a.highlight:
         hp = pw[pw.algorithm == a.highlight].set_index("versus").drop(columns="algorithm")
         md += [f"## {a.highlight} versus each algorithm", hp.to_markdown(), ""]
