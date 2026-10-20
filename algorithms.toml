@@ -488,3 +488,46 @@ enabled = false
 source = "algorithms/makespan/dsla.cpp"
 args = ["slas"]
 enabled = false
+
+# ---------------------------------------------------------------------------
+# Round 5 (lab4.cpp): improved OPPTS, static tables only (no state-aware look-ahead, one schedule).
+# l4_oppts must reproduce oppts; l4_heft must reproduce heft; l4_heft_ins is HEFT with insertion.
+# ---------------------------------------------------------------------------
+[l4_oppts]
+source = "algorithms/makespan/lab4.cpp"
+enabled = false
+
+[l4_heft]
+source = "algorithms/makespan/lab4.cpp"
+args = ["rank=heft", "beta=0"]
+enabled = false
+
+[l4_heft_ins]
+source = "algorithms/makespan/lab4.cpp"
+args = ["rank=heft", "beta=0", "ins=1"]
+enabled = false
+
+[l4_hr_pcm]
+source = "algorithms/makespan/lab4.cpp"
+args = ["rank=heft", "tbl=pcm"]
+enabled = false
+
+[l4_ins]
+source = "algorithms/makespan/lab4.cpp"
+args = ["ins=1"]
+enabled = false
+
+[l4_hr_ins]
+source = "algorithms/makespan/lab4.cpp"
+args = ["rank=heft", "ins=1"]
+enabled = false
+
+[l4_hr_pcm_ins]
+source = "algorithms/makespan/lab4.cpp"
+args = ["rank=heft", "tbl=pcm", "ins=1"]
+enabled = false
+
+[l4_hr_b50_ins]
+source = "algorithms/makespan/lab4.cpp"
+args = ["rank=heft", "beta=0.5", "ins=1"]
+enabled = false
