@@ -1,0 +1,128 @@
+nstance files found under {a.data}")
+    def scan(item):
+        rel, m = item
+        r = subprocess.run([tool, "strip", os.path.join(a.data, rel), "-"], capture_output=True, text=True)
+        if r.returncode:
+            return rel, None, r.stderr.strip()
+        meta = json.loads(r.stdout)
+        d = m.groupdict()
+        return rel, dict(path=rel, family=d["family"], dataset=meta["format"], nodes=int(d["nodes"]),
+                         n=meta["n"], p=meta["p"], instance=int(d["inst"]), edges=meta["edges"],
+                         lb=meta["lb"], seq=meta["seq"], size=os.path.getsize(os.path.join(a.data, rel))), ""
+    mpath = os.path.join(a.data, ".assets.json")
+    assets = json.load(open(mpath)) if os.path.exists(mpath) else {}
+    rows, bad = [], []
+    with ThreadPoolExecutor(os.cpu_count() or 1) as ex:
+        for rel, row, err in ex.map(scan, files):
+            if row is None:
+                bad.append((rel, err))
+            else:
+                if int(PATH_RE.search(rel).group("procs")) != row["p"]:
+                    bad.append((rel, f"folder says {PATH_RE.search(rel).group('procs')} processors, file says {row['p']}"))
+                row["asset"] = assets.get(row["family"], "")
+                rows.append(row)
+    rows.sort(key=lambda r: (r["family"], r["nodes"], r["p"], r["instance"]))
+    with open(a.out, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=INDEX_FIELDS); w.writeheader(); w.writerows(rows)
+    fams = {}
+    for r in rows:
+        fams.setdefault((r["family"], r["dataset"]), 0); fams[(r["family"], r["dataset"])] += 1
+    print(f"indexed {len(rows)} instances -> {os.path.relpath(a.out, ROOT)}")
+    for (fam, ds), k in sorted(fams.items()):
+        print(f"  {fam:12s} {ds}  {k} files")
+    if bad:
+        print(f"{len(bad)} problem files:")
+        for rel, err in bad[:50]:
+            print(f"  ! {rel}: {err}")
+        if a.strict:
+            sys.exit(1)
+
+def read_index():
+    if not os.path.exists(INDEX):
+        sys.exit("data_index.csv not found: run `bench.py index --data <folder>` first")
+    with open(INDEX, newline="") as f:
+        return list(csv.DictReader(f))
+
+# ------------------------------------------------------------------ store
+def read_store():
+    if not os.path.exists(STORE):
+        return {}
+    with open(STORE, newline="") as f:
+        return {(r["algo"], r["algo_hash"], r["path"]): r for r in csv.DictReader(f)}
+
+def done_keys():
+    return {k for k, r in read_store().items() if r["status"] not in RETRY}
+
+def write_rows(path, rows, fields=FIELDS):
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=fields); w.writeheader()
+        for r in rows:
+            w.writerow({k: r.get(k, "") for k in fields})
+
+# ------------------------------------------------------------------ plan
+def select(index, a):
+    sel = {k: csvset(getattr(a, k), int if k in ("nodes", "procs", "instances") else str)
+           for k in ("datasets", "families", "nodes", "procs", "instances")}
+    split = getattr(a, "split", "all") or "all"
+    out = []
+    for r in index:
+        if split != "all" and split_of(r["path"]) != split: continue
+        if sel["datasets"] and r["dataset"] not in sel["datasets"]: continue
+        if sel["families"] and r["family"] not in sel["families"]: continue
+        if sel["nodes"] and int(r["nodes"]) not in sel["nodes"]: continue
+        if sel["procs"] and int(r["p"]) not in sel["procs"]: continue
+        if sel["instances"] and int(r["instance"]) not in sel["instances"]: continue
+        out.append(r)
+    return out
+
+def cmd_plan(a):
+    algos = load_algos()
+    names = pick_algos(a.algos, algos)
+    insts = select(read_index(), a)
+    if not insts:
+        sys.exit("no instances match the selection")
+    store = set() if a.force else done_keys()
+    groups, cached = [], 0
+    for r in insts:
+        todo = [n for n in names if (n, algos[n]["hash"], r["path"]) not in store]
+        cached += len(names) - len(todo)
+        if todo:
+            # cost model: reading/processing is ~n^2, processor loops add a factor of p
+            unit = int(r["n"]) ** 2 * (1 + int(r["p"]) / 16)
+            # small instances: all algorithms in one group (instance prepared once);
+            # large instances: one group per algorithm so they spread across cores and shards
+            parts = [todo] if int(r["n"]) < a.split_nodes else [[n] for n in todo]
+            for part in parts:
+                groups.append(dict(path=r["path"], family=r["family"], algos=part, cost=unit * len(part)))
+    k = max(1, min(a.shards, len(groups)))
+    shards = [dict(cost=0, groups=[]) for _ in range(k)]
+    for g in sorted(groups, key=lambda g: -g["cost"]):
+        s = min(shards, key=lambda s: s["cost"]); s["groups"].append(g); s["cost"] += g["cost"]
+    plan = dict(algos=names, shards=[s["groups"] for s in shards],
+                runs_total=len(insts) * len(names), runs_cached=cached,
+                runs_todo=sum(len(g["algos"]) for g in groups))
+    os.makedirs(os.path.dirname(a.out), exist_ok=True)
+    with open(a.out, "w") as f:
+        json.dump(plan, f)
+    print(f"instances: {len(insts)}  algorithms: {len(names)}  runs: {plan['runs_total']}  "
+          f"already done: {cached}  to run: {plan['runs_todo']}  shards: {k if groups else 0}")
+    if a.github_output:
+        matrix = [dict(shard=i, families=" ".join(sorted({g["family"] for g in s["groups"]})))
+                  for i, s in enumerate(shards) if s["groups"]]
+        with open(a.github_output, "a") as f:
+            f.write(f"matrix={json.dumps(matrix)}\n")
+            f.write(f"todo={plan['runs_todo']}\n")
+
+# ------------------------------------------------------------------ run
+def run_group(g, data, algos, tool, tmp):
+    raw = os.path.join(data, g["path"])
+    d = PATH_RE.search(g["path"]).groupdict()
+    base = dict(family=d["family"], nodes=int(d["nodes"]), instance=int(d["inst"]), path=g["path"])
+    key = hashlib.md5((g["path"] + "|" + ",".join(g["algos"])).encode()).hexdigest()
+    d3, d2 = os.path.join(tmp, key + ".d3"), os.path.join(tmp, key + ".d2")
+    need_d2 = any(algos[n]["input"] == "d2" for n in g["algos"])
+    if not os.path.exists(raw):
+        return [dict(base, algo=n, algo_hash=algos[n]["hash"], status="missing_file") for n in g["algos"]]
+    r = subprocess.run([tool, "strip", raw, d3] + ([d2] if need_d2 else []), capture_output=True, text=True)
+    if r.r

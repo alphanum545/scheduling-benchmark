@@ -1,0 +1,125 @@
+eturncode:
+        return [dict(base, algo=n, algo_hash=algos[n]["hash"], status="bad_instance",
+                     first_violation=r.stderr.strip()[:300]) for n in g["algos"]]
+    meta = json.loads(r.stdout)
+    base.update(dataset=meta["format"], n=meta["n"], p=meta["p"], lb=meta["lb"], seq=meta["seq"])
+    rows = []
+    for n in g["algos"]:
+        a = algos[n]
+        row = dict(base, algo=n, algo_hash=a["hash"])
+        exe = os.path.join(BUILD, f"{n}-{a['hash']}")
+        inp = {"d3": d3, "d2": d2, "raw": raw}[a["input"]]
+        outf = d3 + f".{n}.out"
+        t0 = time.perf_counter()
+        try:
+            with open(inp, "rb") as fi, open(outf, "wb") as fo:
+                p = subprocess.run([exe, *map(str, a["args"])], stdin=fi, stdout=fo,
+                                   stderr=subprocess.DEVNULL, timeout=a["timeout"])
+            row["runtime_s"] = round(time.perf_counter() - t0, 4)
+        except subprocess.TimeoutExpired:
+            row.update(status="timeout", runtime_s=a["timeout"]); rows.append(row); continue
+        if p.returncode:
+            row["status"] = f"crash({p.returncode})"; rows.append(row); os.remove(outf); continue
+        if a["output"] == "schedule":
+            cmd = [tool, "check", d3, outf] + (["--dup-entry"] if a["duplication"] else [])
+            cr = subprocess.run(cmd, capture_output=True, text=True)
+            try:
+                c = json.loads(cr.stdout)
+            except json.JSONDecodeError:
+                row.update(status="check_error", first_violation=(cr.stderr or cr.stdout).strip()[:300])
+                rows.append(row); os.remove(outf); continue
+            mk = c["makespan"]
+            row.update(makespan=mk, violations=c["violations"], first_violation=c["first"],
+                       status="ok" if c["valid"] else "invalid")
+            row.update({k: c[k] for k in EXTRA if k in c})
+        else:  # makespan-only output: the last number printed
+            nums = re.findall(r"-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?", open(outf).read())
+            os.remove(outf)
+            if not nums:
+                row["status"] = "no_output"; rows.append(row); continue
+            mk = float(nums[-1])
+            low = mk < meta["lb"]
+            row.update(makespan=mk, status="invalid" if low else "unchecked",
+                       first_violation="makespan below the critical-path lower bound" if low else "")
+        if os.path.exists(outf):
+            os.remove(outf)
+        if mk:
+            row.update(slr=round(mk / meta["lb"], 6) if meta["lb"] else "",
+                       speedup=round(meta["seq"] / mk, 6), efficiency=round(meta["seq"] / mk / meta["p"], 6))
+        rows.append(row)
+    for f in (d3, d2):
+        if os.path.exists(f):
+            os.remove(f)
+    return rows
+
+def cmd_run(a):
+    with open(a.plan) as f:
+        plan = json.load(f)
+    algos = load_algos()
+    groups = plan["shards"][a.shard] if a.shard is not None else [g for s in plan["shards"] for g in s]
+    if a.out is None:
+        a.out = os.path.join(WORK, f"shard-{a.shard if a.shard is not None else 'all'}.csv")
+    if not groups:
+        print("nothing to run"); write_rows(a.out, []); return
+    tool = build_tool()
+    build_algos(sorted({n for g in groups for n in g["algos"]}), algos)
+    workers = a.workers or os.cpu_count() or 1
+    tmp = tempfile.mkdtemp(prefix="bench-")
+    rows, t0, done = [], time.time(), 0
+    total = sum(len(g["algos"]) for g in groups)
+    step = max(1, total // 20)
+    with ThreadPoolExecutor(workers) as ex:
+        futs = [ex.submit(run_group, g, a.data, algos, tool, tmp)
+                for g in sorted(groups, key=lambda g: -g["cost"])]  # big instances first
+        nxt = step
+        for fu in as_completed(futs):
+            rs = fu.result(); rows += rs; done += len(rs)
+            for r in rs:
+                if r["status"] not in VALID:
+                    print(f"  ! {r['algo']:12s} {r['path']}: {r['status']} {r.get('first_violation', '')}")
+            if done >= nxt or done == total:
+                print(f"[{done}/{total}] {time.time() - t0:.0f}s", flush=True); nxt = done + step
+    shutil.rmtree(tmp, ignore_errors=True)
+    write_rows(a.out, rows)
+    ok = sum(r["status"] in VALID for r in rows)
+    print(f"done: {len(rows)} runs, {ok} valid, {len(rows) - ok} flagged, "
+          f"{time.time() - t0:.0f}s on {workers} workers")
+
+# ------------------------------------------------------------------ merge
+def cmd_merge(a):
+    store = read_store()
+    # Drop rows for instances that are no longer in the index (e.g. a family was
+    # re-generated and a file was dropped, or a malformed file was excluded).
+    # The store is cumulative, so without this those rows would keep showing up
+    # in the Validity sheet forever.
+    if os.path.exists(INDEX):
+        live = {r["path"] for r in csv.DictReader(open(INDEX))}
+        stale = [k for k in store if k[2] not in live]
+        for k in stale:
+            del store[k]
+        if stale:
+            print(f"pruned {len(stale)} stored row(s) for instances no longer in the index")
+    n = 0
+    for path in sorted(glob.glob(a.inputs)):
+        with open(path, newline="") as f:
+            for r in csv.DictReader(f):
+                store[(r["algo"], r["algo_hash"], r["path"])] = r; n += 1
+    write_rows(STORE, sorted(store.values(), key=lambda r: (r["path"], r["algo"], r["algo_hash"])))
+    print(f"merged {n} rows; store now has {len(store)} rows")
+
+# ------------------------------------------------------------------ cli
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sp = ap.add_subparsers(dest="cmd", required=True)
+    i = sp.add_parser("index")
+    i.add_argument("--data", default=os.path.join(ROOT, "data"))
+    i.add_argument("--out", default=INDEX)
+    i.add_argument("--strict", action="store_true", help="fail if any file is unreadable")
+    p = sp.add_parser("plan")
+    p.add_argument("--algos", default="all")
+    for k in ("datasets", "families", "nodes", "procs", "instances"):
+        p.add_argument(f"--{k}", default="all")
+    p.add_argument("--split", default="all", choices=["all", "dev", "test"],
+                   help="dev = about 1/4 of the instances for designing algorithms; test = the held-out rest")
+    p.add_argument("--shards", type=int, default=1)
+    p.add_argument("--split-nodes", type=int, default=500, help="instances with at least this many tasks run each algorithm as a s

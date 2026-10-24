@@ -1,0 +1,15 @@
+).write("\n".join(md))
+
+    made = [] if a.no_figures else figures(c, names, os.path.join(out, "figures"), a.highlight)
+    if a.highlight and not a.no_figures and len(names) > 1:
+        made.append(gain_figure(pw, a.highlight, names, os.path.join(out, "figures")))
+    print(f"report written to {os.path.relpath(out, ROOT)}  ({n_inst}/{n_all} instances compared, "
+          f"{len(made)} figures)")
+    print(validity.to_string())
+    if a.highlight:
+        print(pw[pw.algorithm == a.highlight].to_string(index=False))
+    print(sig_md)
+
+
+if __name__ == "__main__":
+    main()

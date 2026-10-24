@@ -1,0 +1,114 @@
+hor=(0.5, 1.0), handlelength=2.6)
+        base = os.path.join(outdir, f"{metric}_vs_{'tasks' if by == 'nodes' else 'processors'}")
+        fig.savefig(base + ".png", bbox_inches="tight"); fig.savefig(base + ".pdf", bbox_inches="tight")
+        plt.close(fig)
+        made.append(os.path.basename(base))
+    return made
+
+
+def gain_figure(pw, highlight, names, outdir):
+    """Average % makespan reduction of the highlighted algorithm over each other algorithm."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    t = pw[pw.algorithm == highlight].set_index("versus").reindex([n for n in names if n != highlight])
+    t = t.sort_values("avg_gain_pct")
+    fig, ax = plt.subplots(figsize=(6.4, 0.42 * len(t) + 1.1))
+    y = range(len(t))
+    ax.barh(y, t.avg_gain_pct, height=0.6, color=PALETTE[0])
+    ax.axvline(0, color="#52514e", lw=0.8)
+    span = max(1e-9, t.avg_gain_pct.abs().max())
+    for yi, (v, b, w) in zip(y, zip(t.avg_gain_pct, t.better_pct, t.worse_pct)):
+        ax.text(v + (0.02 if v >= 0 else -0.02) * span, yi, f"{v:+.2f}%  (better {b:.0f}%, worse {w:.0f}%)",
+                va="center", ha="left" if v >= 0 else "right", fontsize=8, color="#0b0b0b")
+    ax.set_yticks(list(y), [n.upper() for n in t.index])
+    ax.set_xlabel(f"Average makespan reduction of {highlight.upper()} (%)")
+    ax.set_xlim(-span * 1.9 if (t.avg_gain_pct < 0).any() else 0, span * 1.9)
+    ax.grid(axis="y", visible=False)
+    ax.set_title(f"{highlight.upper()} versus each algorithm (same instances)", loc="left", fontsize=9.5)
+    fig.tight_layout()
+    base = os.path.join(outdir, "gain_vs_baselines")
+    fig.savefig(base + ".png", bbox_inches="tight"); fig.savefig(base + ".pdf", bbox_inches="tight")
+    plt.close(fig)
+    return "gain_vs_baselines"
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--algos", default="all")
+    ap.add_argument("--highlight", default=None, help="your proposed algorithm: drawn first, gains computed against it")
+    for k in ("datasets", "families", "nodes", "procs"):
+        ap.add_argument(f"--{k}", default="all")
+    ap.add_argument("--split", default="all", choices=["all", "dev", "test"])
+    ap.add_argument("--name", default="latest")
+    ap.add_argument("--no-figures", action="store_true")
+    a = ap.parse_args()
+
+    df, names = load(a)
+    out = os.path.join(ROOT, "results", "reports", a.name)
+    os.makedirs(out, exist_ok=True)
+    df.sort_values(["dataset", "family", "nodes", "p", "instance", "algo"]).to_csv(
+        os.path.join(out, "results.csv"), index=False)
+
+    validity = df.pivot_table(index="algo", columns="status", values="path", aggfunc="count", fill_value=0)
+    validity = validity.reindex(names)
+    first_bad = (df[~df.status.isin(VALID)].groupby("algo").first_violation.first().reindex(names).fillna(""))
+    validity["example_problem"] = first_bad
+    c = comparable(df, names)
+    n_inst, n_all = c.path.nunique(), df.path.nunique()
+    pw = pairwise(c, names)
+    runtime = df.groupby(["algo", "nodes"]).runtime_s.mean().unstack().reindex(names).round(4)
+    cols = ["makespan", "slr", "speedup", "efficiency", "runtime_s"]
+    extra = [k for k in ("comm_ratio", "imbalance", "utilization", "rob_ratio", "rob_cv", "cont_mk", "cont_ratio")
+             if k in c and c.groupby("algo")[k].count().reindex(names).fillna(0).min() == c.groupby("algo").size().reindex(names).min()]
+    overall = c.groupby("algo")[cols].mean().reindex(names).round(4)
+    secondary = c.groupby("algo")[extra].mean().reindex(names).round(4) if extra else None
+
+    tables = {
+        "Overall": overall,
+        "Validity": validity,
+        "Makespan_by_tasks": pivot(c, "nodes", "makespan", names),
+        "Makespan_by_procs": pivot(c, "p", "makespan", names),
+        "SLR_by_tasks": pivot(c, "nodes", "slr", names),
+        "SLR_by_procs": pivot(c, "p", "slr", names),
+        "Speedup_by_procs": pivot(c, "p", "speedup", names),
+        "Efficiency_by_procs": pivot(c, "p", "efficiency", names),
+        "Pairwise": pw.set_index(["algorithm", "versus"]),
+        "Runtime_s_by_tasks": runtime,
+    }
+    if secondary is not None:
+        tables["Secondary_metrics"] = secondary
+    sig = significance_tables(c, names, a.highlight) if len(names) > 1 else {"_markdown": ""}
+    sig_md = sig.pop("_markdown")
+    tables.update(sig)
+    xlsx = os.path.join(out, "summary.xlsx")
+    with pd.ExcelWriter(xlsx, engine="openpyxl") as xw:
+        info = pd.DataFrame({"item": ["algorithms", "instances selected", "instances compared",
+                                      "rule", "highlight"],
+                             "value": [", ".join(names), n_all, n_inst,
+                                       "averages use only instances where every algorithm produced a valid schedule",
+                                       a.highlight or ""]})
+        info.to_excel(xw, sheet_name="About", index=False)
+        for name, t in tables.items():
+            t.to_excel(xw, sheet_name=name)
+        for ws in xw.book.worksheets:
+            ws.freeze_panes = "B2"
+            for col in ws.columns:
+                width = max(len(str(cell.value)) if cell.value is not None else 0 for cell in col)
+                ws.column_dimensions[col[0].column_letter].width = min(max(10, width + 2), 60)
+
+    md = [f"# Benchmark report: {a.name}", "",
+          f"Algorithms: {', '.join(names)}  ",
+          f"Instances compared: {n_inst} of {n_all} (only those where every algorithm is valid)", "",
+          "## Validity", validity.to_markdown(), "", "## Overall averages", overall.to_markdown(), ""]
+    if secondary is not None:
+        md += ["## Secondary metrics (means over the compared instances)",
+               "comm_ratio = communication paid / total; imbalance = max / mean processor busy time; "
+               "utilization = busy / (p x makespan); rob_ratio = mean makespan under +-20% cost noise / makespan; "
+               "rob_cv = coefficient of variation of the perturbed makespans; cont_mk = makespan of the schedule replayed "
+               "under network contention (one-port model), cont_ratio = cont_mk / makespan.", "", secondary.to_markdown(), ""]
+    if a.highlight:
+        hp = pw[pw.algorithm == a.highlight].set_index("versus").drop(columns="algorithm")
+        md += [f"## {a.highlight} versus each algorithm", hp.to_markdown(), ""]
+    md += [sig_md]
+    open(os.path.join(out, "summary.md"), "w"

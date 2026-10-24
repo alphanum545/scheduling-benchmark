@@ -1,0 +1,105 @@
+   for (auto &e : I.succ[u]) m = max(m, best[e.first]);
+        best[u] = *min_element(I.comp[u].begin(), I.comp[u].end()) + m;
+        lb = max(lb, best[u]);
+    }
+    ll seq = -1;
+    for (int j = 0; j < I.p; j++) { ll s = 0; for (int i = 0; i < I.n; i++) s += I.comp[i][j]; if (seq < 0 || s < seq) seq = s; }
+    printf("{\"n\":%d,\"p\":%d,\"format\":\"%s\",\"lb\":%lld,\"seq\":%lld,\"edges\":%d}\n", I.n, I.p, fmt, lb, seq, I.edges);
+    return 0;
+}
+
+static string esc(const string &s) { string r; for (char c : s) { if (c == '"' || c == '\\') r += '\\'; r += c; } return r; }
+
+static int cmdCheck(const char *inst, const char *sched, bool dupEntry) {
+    vector<string> t = readTokens(inst);
+    Inst I; I.n = atoi(t[0].c_str()); I.p = atoi(t[1].c_str());
+    if (t.size() != 2 + (size_t)I.n * I.p + (size_t)I.n * I.n) { fprintf(stderr, "check needs a D3 instance\n"); return 2; }
+    buildGraph(I, t, 2);
+    // parse schedule: rows of 4 integers after the first line containing a letter
+    ifstream in(sched); string line; bool header = false;
+    vector<ll> st(I.n, -1), ft(I.n, -1); vector<int> pr(I.n, -1);
+    int rows = 0;
+    while (getline(in, line)) {
+        if (!header) { for (char c : line) if (isalpha((unsigned char)c)) { header = true; break; } continue; }
+        istringstream ss(line); ll a, b, c, d;
+        if (!(ss >> a >> b >> c >> d)) continue;
+        if (a < 1 || a > I.n) continue;
+        st[a - 1] = b; ft[a - 1] = c; pr[a - 1] = (int)d - 1; rows++;
+    }
+    int nv = 0; string first;
+    auto bad = [&](const string &m) { if (!nv) first = m; nv++; };
+    if (!header) bad("no schedule table found in output");
+    ll mk = 0;
+    for (int i = 0; i < I.n; i++) {
+        if (pr[i] < 0 || pr[i] >= I.p) { bad("task " + to_string(i + 1) + " missing or bad processor"); continue; }
+        mk = max(mk, ft[i]);
+        if (ft[i] - st[i] != I.comp[i][pr[i]]) bad("task " + to_string(i + 1) + " duration " + to_string(ft[i] - st[i]) + " != cost " + to_string(I.comp[i][pr[i]]));
+        if (st[i] < 0) bad("task " + to_string(i + 1) + " negative start");
+    }
+    if (!nv) {
+        for (int v = 0; v < I.n; v++) for (auto &e : I.pred[v]) {
+            int u = e.first; ll need = (pr[u] == pr[v]) ? ft[u] : ft[u] + e.second;
+            if (dupEntry && I.pred[u].empty()) need = min(need, I.comp[u][pr[v]]);
+            if (st[v] < need) bad("t" + to_string(u + 1) + "->t" + to_string(v + 1) + " starts " + to_string(st[v]) + " before data ready " + to_string(need));
+        }
+        vector<vector<pair<ll, ll>>> slots(I.p);
+        for (int i = 0; i < I.n; i++) if (ft[i] > st[i]) slots[pr[i]].push_back({st[i], ft[i]});
+        for (int j = 0; j < I.p; j++) {
+            sort(slots[j].begin(), slots[j].end());
+            for (size_t k = 1; k < slots[j].size(); k++) if (slots[j][k].first < slots[j][k - 1].second) bad("overlap on processor " + to_string(j + 1));
+        }
+    }
+    if (nv || mk <= 0) {
+        printf("{\"makespan\":%lld,\"valid\":%d,\"violations\":%d,\"first\":\"%s\"}\n", mk, nv ? 0 : 1, nv, esc(first).c_str());
+        return 0;
+    }
+    // ---- secondary metrics (valid schedules only)
+    double commAll = 0, commPaid = 0;
+    for (int v = 0; v < I.n; v++) for (auto &e : I.pred[v]) {
+        commAll += e.second;
+        if (pr[e.first] != pr[v] && !(dupEntry && I.pred[e.first].empty())) commPaid += e.second;
+    }
+    vector<double> busy(I.p, 0);
+    for (int i = 0; i < I.n; i++) busy[pr[i]] += ft[i] - st[i];
+    double tot = 0, mx = 0; for (double b : busy) { tot += b; mx = max(mx, b); }
+    double imbalance = tot > 0 ? mx / (tot / I.p) : 1, util = tot / ((double)I.p * mk);
+    // robustness replay: per-processor order by start time; tasks in topological order of
+    // (precedence + processor order); perturbed costs drawn per task and per edge in a fixed order
+    vector<vector<int>> onp(I.p);
+    for (int i = 0; i < I.n; i++) onp[pr[i]].push_back(i);
+    for (auto &q : onp) sort(q.begin(), q.end(), [&](int a, int b) { return st[a] < st[b] || (st[a] == st[b] && a < b); });
+    vector<int> prevOn(I.n, -1);
+    for (auto &q : onp) for (size_t k = 1; k < q.size(); k++) prevOn[q[k]] = q[k - 1];
+    vector<int> ord(I.n); for (int i = 0; i < I.n; i++) ord[i] = i;
+    sort(ord.begin(), ord.end(), [&](int a, int b) { return st[a] < st[b] || (st[a] == st[b] && ft[a] < ft[b]) || (st[a] == st[b] && ft[a] == ft[b] && a < b); });
+    const int RUNS = 30; vector<double> mks;
+    unsigned long long seed = 1469598103934665603ULL; // instance-dependent seed (FNV over n, p, edges)
+    for (unsigned long long x : {(unsigned long long)I.n, (unsigned long long)I.p, (unsigned long long)I.edges}) { seed ^= x; seed *= 1099511628211ULL; }
+    unsigned long long rs = seed;
+    auto rnd = [&]() { rs ^= rs << 13; rs ^= rs >> 7; rs ^= rs << 17; return (double)(rs >> 11) / 9007199254740992.0; };
+    for (int r = 0; r < RUNS; r++) {
+        vector<double> w(I.n); for (int i = 0; i < I.n; i++) w[i] = I.comp[i][pr[i]] * (0.8 + 0.4 * rnd());
+        vector<vector<double>> cm(I.n);
+        for (int v = 0; v < I.n; v++) for (auto &e : I.pred[v]) cm[v].push_back(e.second * (0.8 + 0.4 * rnd()));
+        vector<double> s2(I.n, 0), f2(I.n, 0);
+        for (int v : ord) {
+            double t0 = prevOn[v] >= 0 ? f2[prevOn[v]] : 0;
+            for (size_t k = 0; k < I.pred[v].size(); k++) {
+                int u = I.pred[v][k].first;
+                double need = (pr[u] == pr[v]) ? f2[u] : f2[u] + cm[v][k];
+                if (dupEntry && I.pred[u].empty()) need = min(need, w[u]);
+                t0 = max(t0, need);
+            }
+            s2[v] = t0; f2[v] = t0 + w[v];
+        }
+        mks.push_back(*max_element(f2.begin(), f2.end()));
+    }
+    double mean = 0; for (double x : mks) mean += x; mean /= RUNS;
+    double var = 0; for (double x : mks) var += (x - mean) * (x - mean); var /= RUNS;
+    // contention replay (one-port, full-duplex): each processor sends at most one message and receives at
+    // most one message at a time; a message occupies the sender's out-port and the receiver's in-port for
+    // its whole cost. The replay keeps the mapping and each processor's task order (same order as above).
+    // Tasks are replayed in that order; a task's incoming messages are booked in order of the senders'
+    // finish times, each in the earliest interval where both ports are idle (idle gaps are reused).
+    // Intra-processor data and zero-cost edges use no port.
+    typedef vector<pair<ll, ll>> Busy;  

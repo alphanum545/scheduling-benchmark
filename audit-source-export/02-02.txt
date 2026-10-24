@@ -1,0 +1,47 @@
+                     // sorted, disjoint [start, end)
+    vector<Busy> outB(I.p), inB(I.p);
+    auto conflict = [](const Busy &b, ll t, ll c) -> ll {    // end of the first interval overlapping [t, t+c), or -1
+        auto it = lower_bound(b.begin(), b.end(), make_pair(t, LLONG_MIN));
+        if (it != b.begin() && prev(it)->second > t) return prev(it)->second;
+        if (it != b.end() && it->first < t + c) return it->second;
+        return -1;
+    };
+    auto book = [](Busy &b, ll s, ll e) { b.insert(lower_bound(b.begin(), b.end(), make_pair(s, e)), {s, e}); };
+    vector<ll> f3(I.n, 0);
+    vector<pair<ll, int>> inc;
+    for (int v : ord) {
+        int q = pr[v]; ll t0 = prevOn[v] >= 0 ? f3[prevOn[v]] : 0;
+        inc.clear();
+        for (size_t k = 0; k < I.pred[v].size(); k++) {
+            int u = I.pred[v][k].first;
+            if (pr[u] == q) t0 = max(t0, f3[u]); else inc.push_back({f3[u], (int)k});
+        }
+        sort(inc.begin(), inc.end());
+        for (auto &m : inc) {
+            int u = I.pred[v][m.second].first; ll c = I.pred[v][m.second].second, fu = m.first;
+            if (dupEntry && I.pred[u].empty() && I.comp[u][q] <= fu + c) { t0 = max(t0, I.comp[u][q]); continue; }
+            if (c <= 0) { t0 = max(t0, fu); continue; }
+            ll t = fu;
+            for (;;) {
+                ll a = conflict(outB[pr[u]], t, c); if (a >= 0) { t = a; continue; }
+                ll b = conflict(inB[q], t, c);      if (b >= 0) { t = b; continue; }
+                break;
+            }
+            book(outB[pr[u]], t, t + c); book(inB[q], t, t + c); t0 = max(t0, t + c);
+        }
+        f3[v] = t0 + I.comp[v][q];
+    }
+    ll cmk = *max_element(f3.begin(), f3.end());
+    printf("{\"makespan\":%lld,\"valid\":1,\"violations\":0,\"first\":\"\",\"comm_ratio\":%.6f,\"imbalance\":%.6f,"
+           "\"utilization\":%.6f,\"rob_ratio\":%.6f,\"rob_cv\":%.6f,\"cont_mk\":%lld,\"cont_ratio\":%.6f}\n",
+           mk, commAll > 0 ? commPaid / commAll : 0.0, imbalance, util, mean / mk, mean > 0 ? sqrt(var) / mean : 0.0,
+           cmk, (double)cmk / mk);
+    return 0;
+}
+
+int main(int argc, char **argv) {
+    if (argc >= 4 && !strcmp(argv[1], "strip")) return cmdStrip(argv[2], argv[3], argc > 4 ? argv[4] : nullptr);
+    if (argc >= 4 && !strcmp(argv[1], "check")) return cmdCheck(argv[2], argv[3], argc > 4 && !strcmp(argv[4], "--dup-entry"));
+    fprintf(stderr, "usage: evaluate strip <raw> <out_d3|-> [out_d2] | evaluate check <d3> <stdout_file> [--dup-entry]\n");
+    return 1;
+}
