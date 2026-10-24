@@ -1,8 +1,8 @@
-name: DSLA evidence source export
+name: DSLA bounded source export
 on:
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   export:
     runs-on: ubuntu-latest
@@ -10,33 +10,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 2f078d86b9d39835756f6ed9613279418a52371b
-          persist-credentials: false
-      - name: Package explicitly selected research sources
+          ref: audit/dsla-evidence-export-20261024
+          fetch-depth: 0
+      - name: Export only named public research sources as bounded text
         shell: bash
         run: |
           python3 - <<'PY'
-          import json, hashlib
+          import json,hashlib,subprocess
           from pathlib import Path
-          root=Path('.'); out=Path('audit-export'); out.mkdir()
-          paths=['algorithms.toml','tools/bench.py','tools/evaluate.cpp','tools/report.py','tools/stats.py','tools/generate.py','data_index.csv','results/reports/dsla-equivalence/results.csv','results/reports/full-all-instances-v2/summary.md','results/reports/full-all-instances-v2/results.csv']
-          paths += [str(p) for p in Path('algorithms/makespan').glob('*.cpp')]
+          ref='2f078d86b9d39835756f6ed9613279418a52371b'
+          out=Path('audit-source-export'); out.mkdir(exist_ok=True)
           entries=[]
+          paths=['algorithms.toml','tools/bench.py','tools/evaluate.cpp','tools/report.py']
           for i,p in enumerate(paths):
-              f=Path(p)
-              if not f.is_file():
-                  entries.append({'path':p,'status':'missing'}); continue
-              b=f.read_bytes(); text=b.decode('utf-8')
-              chunks=[text[j:j+7000] for j in range(0,len(text),7000)] or ['']
+              b=subprocess.check_output(['git','show',ref+':'+p]); text=b.decode('utf-8')
+              chunks=[text[j:j+6500] for j in range(0,len(text),6500)]
               names=[]
               for j,ch in enumerate(chunks):
-                  name=f'{i:03d}-{j:04d}.txt'; (out/name).write_text(ch,encoding='utf-8'); names.append(name)
+                  name=f'{i:02d}-{j:02d}.txt'; (out/name).write_text(ch,encoding='utf-8'); names.append(name)
               entries.append({'path':p,'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest(),'git_blob_sha1':hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest(),'chunks':names})
-          (out/'manifest.json').write_text(json.dumps({'source_commit':'2f078d86b9d39835756f6ed9613279418a52371b','files':entries},indent=2))
+          (out/'manifest.json').write_text(json.dumps({'source_commit':ref,'files':entries},indent=2)+'\n')
           PY
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dsla-source-export
-          path: audit-export/
-          retention-days: 1
-          if-no-files-found: error
+      - name: Commit export only to isolated branch
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit-source-export
+          git diff --staged --quiet || git commit -m 'audit: expose bounded copies of four pinned public source files'
+          git push origin HEAD:refs/heads/audit/dsla-evidence-export-20261024
