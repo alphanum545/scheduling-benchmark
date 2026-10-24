@@ -1,0 +1,16 @@
+{
+  "protocol_status": "PRECOMMITTED_BEFORE_RESULTS",
+  "source": "wfcommons/WfInstances@v1.5",
+  "source_family_paths": [
+    "pegasus/1000genome",
+    "pegasus/cycles",
+    "pegasus/seismology",
+    "pegasus/soykb",
+    "pegasus/srasearch"
+  ],
+  "source_method_sha256": "5be7070a3a0428e37babab2c7a932b455eb504c753ce4549c9bc47cccb448799",
+  "holdout_script_sha256": "50cfa12bfcd487f071675ecb1f5e3e93929425e62d37ce346b5a9349746f69a2",
+  "analysis_script_sha256": "5727b86952b7bc1a8c7d8a1b7332b74730382f780b892ecc408b983ee702e60f",
+  "model": "WfInstances-v1.5-real-DAG-runtime-modeled-heterogeneous-cost-v1",
+  "includes_perf_selected_inputs": false
+}
