@@ -1,0 +1,324 @@
+{
+  "analysis_protocol": "family-equal macro of trace-level means of fixed 8 process/network conditions",
+  "cohort": "Pegasus measured workflow DAG/runtime; deterministic modeled processor costs and transfer delays; not observed heterogeneous machine completion",
+  "seed": 20261024,
+  "bootstrap_replicates": 4000,
+  "processors_primary": [
+    2,
+    4,
+    8,
+    16
+  ],
+  "processors_reference": 1,
+  "bandwidth_mib_s": [
+    125,
+    1000
+  ],
+  "num_source_files": 92,
+  "eligible_traces": 89,
+  "excluded_traces": 3,
+  "case_count_including_p1": 890,
+  "primary_case_count": 712,
+  "compared_methods": [
+    "dsla",
+    "heft_insertion_reimplementation",
+    "peft_insertion_reimplementation",
+    "portfolio_heft_peft",
+    "portfolio_static",
+    "portfolio_no_offset",
+    "portfolio_all_children"
+  ],
+  "by_family": [
+    {
+      "family": "1000genome",
+      "source_files_found": 22,
+      "eligible": 22,
+      "excluded": 0,
+      "cases": 220,
+      "schedule_records": 1540,
+      "fatal_cases": 0,
+      "source_commit": "2f078d86b9d39835756f6ed9613279418a52371b",
+      "source_sha256": "5be7070a3a0428e37babab2c7a932b455eb504c753ce4549c9bc47cccb448799",
+      "wfinstances_sha": "1fd739359dd3ef2d68aa4e5aefaf11df43c617ae",
+      "shards": 4
+    },
+    {
+      "family": "cycles",
+      "source_files_found": 24,
+      "eligible": 21,
+      "excluded": 3,
+      "cases": 210,
+      "schedule_records": 1470,
+      "fatal_cases": 0,
+      "source_commit": "2f078d86b9d39835756f6ed9613279418a52371b",
+      "source_sha256": "5be7070a3a0428e37babab2c7a932b455eb504c753ce4549c9bc47cccb448799",
+      "wfinstances_sha": "1fd739359dd3ef2d68aa4e5aefaf11df43c617ae",
+      "shards": 4
+    },
+    {
+      "family": "seismology",
+      "source_files_found": 11,
+      "eligible": 11,
+      "excluded": 0,
+      "cases": 110,
+      "schedule_records": 770,
+      "fatal_cases": 0,
+      "source_commit": "2f078d86b9d39835756f6ed9613279418a52371b",
+      "source_sha256": "5be7070a3a0428e37babab2c7a932b455eb504c753ce4549c9bc47cccb448799",
+      "wfinstances_sha": "1fd739359dd3ef2d68aa4e5aefaf11df43c617ae",
+      "shards": 4
+    },
+    {
+      "family": "soykb",
+      "source_files_found": 10,
+      "eligible": 10,
+      "excluded": 0,
+      "cases": 100,
+      "schedule_records": 700,
+      "fatal_cases": 0,
+      "source_commit": "2f078d86b9d39835756f6ed9613279418a52371b",
+      "source_sha256": "5be7070a3a0428e37babab2c7a932b455eb504c753ce4549c9bc47cccb448799",
+      "wfinstances_sha": "1fd739359dd3ef2d68aa4e5aefaf11df43c617ae",
+      "shards": 4
+    },
+    {
+      "family": "srasearch",
+      "source_files_found": 25,
+      "eligible": 25,
+      "excluded": 0,
+      "cases": 250,
+      "schedule_records": 1750,
+      "fatal_cases": 0,
+      "source_commit": "2f078d86b9d39835756f6ed9613279418a52371b",
+      "source_sha256": "5be7070a3a0428e37babab2c7a932b455eb504c753ce4549c9bc47cccb448799",
+      "wfinstances_sha": "1fd739359dd3ef2d68aa4e5aefaf11df43c617ae",
+      "shards": 4
+    }
+  ],
+  "comparisons": [
+    {
+      "comparator": "heft_insertion_reimplementation",
+      "outcome": "100*(1-Cmax_DSLA/Cmax_comparator)",
+      "primary_case_count": 712,
+      "independent_trace_count": 89,
+      "families": 5,
+      "family_equal_mean_gain_percent": 0.8087548459741555,
+      "ci95_family_stratified_trace_bootstrap": [
+        0.6721273274680358,
+        0.940224053534436
+      ],
+      "instance_weighted_mean_gain_percent": 0.6559997081816423,
+      "median_case_gain_percent": 0.5752099983359793,
+      "wins": 522,
+      "ties": 38,
+      "losses": 152,
+      "worst_gain_percent": -6.089255725199827,
+      "worst_case": [
+        "srasearch",
+        "srasearch-chameleon-40a-003.json",
+        16,
+        1000
+      ],
+      "family_means": {
+        "1000genome": 0.6716951697303108,
+        "cycles": 0.6607007695519093,
+        "seismology": 2.517877670620611,
+        "soykb": 0.18681371616774411,
+        "srasearch": 0.006686903800202706
+      },
+      "median_dsla_vs_comparator_total_instrumented_time_ratio": 2.0720891986443517
+    },
+    {
+      "comparator": "peft_insertion_reimplementation",
+      "outcome": "100*(1-Cmax_DSLA/Cmax_comparator)",
+      "primary_case_count": 712,
+      "independent_trace_count": 89,
+      "families": 5,
+      "family_equal_mean_gain_percent": 5.0937598896771,
+      "ci95_family_stratified_trace_bootstrap": [
+        4.614546086773578,
+        5.601472415786729
+      ],
+      "instance_weighted_mean_gain_percent": 4.729023273576885,
+      "median_case_gain_percent": 3.495327634429618,
+      "wins": 643,
+      "ties": 9,
+      "losses": 60,
+      "worst_gain_percent": -12.649291140629249,
+      "worst_case": [
+        "srasearch",
+        "srasearch-chameleon-20a-005.json",
+        16,
+        125
+      ],
+      "family_means": {
+        "1000genome": 2.2839098953976875,
+        "cycles": 8.16715992194445,
+        "seismology": 5.904104494802363,
+        "soykb": 6.243938837339382,
+        "srasearch": 2.8696862989016183
+      },
+      "median_dsla_vs_comparator_total_instrumented_time_ratio": 1.771399898150052
+    },
+    {
+      "comparator": "portfolio_heft_peft",
+      "outcome": "100*(1-Cmax_DSLA/Cmax_comparator)",
+      "primary_case_count": 712,
+      "independent_trace_count": 89,
+      "families": 5,
+      "family_equal_mean_gain_percent": 0.6296583599281738,
+      "ci95_family_stratified_trace_bootstrap": [
+        0.4785615868404001,
+        0.7723986226147028
+      ],
+      "instance_weighted_mean_gain_percent": 0.4254730834819372,
+      "median_case_gain_percent": 0.4844896329999959,
+      "wins": 495,
+      "ties": 30,
+      "losses": 187,
+      "worst_gain_percent": -12.649291140629249,
+      "worst_case": [
+        "srasearch",
+        "srasearch-chameleon-20a-005.json",
+        16,
+        125
+      ],
+      "family_means": {
+        "1000genome": 0.5582873508808706,
+        "cycles": 0.6450632428957384,
+        "seismology": 2.4130621281705413,
+        "soykb": 0.18681371616774411,
+        "srasearch": -0.654934638474026
+      },
+      "median_dsla_vs_comparator_total_instrumented_time_ratio": 0.9636056985048757
+    },
+    {
+      "comparator": "portfolio_static",
+      "outcome": "100*(1-Cmax_DSLA/Cmax_comparator)",
+      "primary_case_count": 712,
+      "independent_trace_count": 89,
+      "families": 5,
+      "family_equal_mean_gain_percent": 0.028736483111212824,
+      "ci95_family_stratified_trace_bootstrap": [
+        -0.001406759078588726,
+        0.05796792093627346
+      ],
+      "instance_weighted_mean_gain_percent": 0.021373285558833586,
+      "median_case_gain_percent": 0.0,
+      "wins": 176,
+      "ties": 394,
+      "losses": 142,
+      "worst_gain_percent": -1.7878288562027222,
+      "worst_case": [
+        "cycles",
+        "cycles-chameleon-1l-2c-9p-001.json",
+        16,
+        125
+      ],
+      "family_means": {
+        "1000genome": 0.043411652166271825,
+        "cycles": -0.014311879476251203,
+        "seismology": 0.10235891308575207,
+        "soykb": 0.012255050158071629,
+        "srasearch": -3.132037778019736e-05
+      },
+      "median_dsla_vs_comparator_total_instrumented_time_ratio": 1.0048554646243024
+    },
+    {
+      "comparator": "portfolio_no_offset",
+      "outcome": "100*(1-Cmax_DSLA/Cmax_comparator)",
+      "primary_case_count": 712,
+      "independent_trace_count": 89,
+      "families": 5,
+      "family_equal_mean_gain_percent": 0.37414399180606545,
+      "ci95_family_stratified_trace_bootstrap": [
+        0.29102155449766515,
+        0.45562267462022565
+      ],
+      "instance_weighted_mean_gain_percent": 0.34673925126664357,
+      "median_case_gain_percent": 0.340089241151742,
+      "wins": 474,
+      "ties": 60,
+      "losses": 178,
+      "worst_gain_percent": -6.089255725199827,
+      "worst_case": [
+        "srasearch",
+        "srasearch-chameleon-40a-003.json",
+        16,
+        1000
+      ],
+      "family_means": {
+        "1000genome": 0.3431602412323956,
+        "cycles": 0.6535586930853836,
+        "seismology": 0.6203333962885693,
+        "soykb": 0.23865483792988068,
+        "srasearch": 0.015012790494098037
+      },
+      "median_dsla_vs_comparator_total_instrumented_time_ratio": 0.9954809340693588
+    },
+    {
+      "comparator": "portfolio_all_children",
+      "outcome": "100*(1-Cmax_DSLA/Cmax_comparator)",
+      "primary_case_count": 712,
+      "independent_trace_count": 89,
+      "families": 5,
+      "family_equal_mean_gain_percent": 0.0005597100802265185,
+      "ci95_family_stratified_trace_bootstrap": [
+        -6.0030094441897546e-05,
+        0.0015942368688444874
+      ],
+      "instance_weighted_mean_gain_percent": 0.000593701062249027,
+      "median_case_gain_percent": 0.0,
+      "wins": 4,
+      "ties": 706,
+      "losses": 2,
+      "worst_gain_percent": -0.01320662077721746,
+      "worst_case": [
+        "1000genome",
+        "1000genome-chameleon-20ch-250k-001.json",
+        16,
+        125
+      ],
+      "family_means": {
+        "1000genome": 0.0020711575440697893,
+        "cycles": 0.0,
+        "seismology": 0.0,
+        "soykb": 0.000727392857062803,
+        "srasearch": 0.0
+      },
+      "median_dsla_vs_comparator_total_instrumented_time_ratio": 0.9860724749691063
+    }
+  ],
+  "efficiency": [
+    {
+      "processors": 2,
+      "mean_speedup": 2.410448888167855,
+      "mean_efficiency": 1.2052244440839275,
+      "fraction_efficiency_below_0_8": 0.0
+    },
+    {
+      "processors": 4,
+      "mean_speedup": 5.297491089149546,
+      "mean_efficiency": 1.3243727722873866,
+      "fraction_efficiency_below_0_8": 0.0
+    },
+    {
+      "processors": 8,
+      "mean_speedup": 10.91516001290986,
+      "mean_efficiency": 1.3643950016137325,
+      "fraction_efficiency_below_0_8": 0.06741573033707865
+    },
+    {
+      "processors": 16,
+      "mean_speedup": 21.926710817135515,
+      "mean_efficiency": 1.3704194260709697,
+      "fraction_efficiency_below_0_8": 0.1348314606741573
+    }
+  ],
+  "interpretation_limits": [
+    "Not a cloud-execution makespan study",
+    "Published author-baseline fidelity not independently certified",
+    "No user development-history guarantee for holdout novelty",
+    "Conditioned on the deterministic cost-model profile; no tuning performed"
+  ]
+}

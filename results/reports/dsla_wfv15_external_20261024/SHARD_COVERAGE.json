@@ -1,0 +1,67 @@
+{
+  "1000genome": {
+    "family": "1000genome",
+    "source_files_found": 22,
+    "eligible": 22,
+    "excluded": 0,
+    "cases": 220,
+    "schedule_records": 1540,
+    "fatal_cases": 0,
+    "source_commit": "2f078d86b9d39835756f6ed9613279418a52371b",
+    "source_sha256": "5be7070a3a0428e37babab2c7a932b455eb504c753ce4549c9bc47cccb448799",
+    "wfinstances_sha": "1fd739359dd3ef2d68aa4e5aefaf11df43c617ae",
+    "shards": 4
+  },
+  "cycles": {
+    "family": "cycles",
+    "source_files_found": 24,
+    "eligible": 21,
+    "excluded": 3,
+    "cases": 210,
+    "schedule_records": 1470,
+    "fatal_cases": 0,
+    "source_commit": "2f078d86b9d39835756f6ed9613279418a52371b",
+    "source_sha256": "5be7070a3a0428e37babab2c7a932b455eb504c753ce4549c9bc47cccb448799",
+    "wfinstances_sha": "1fd739359dd3ef2d68aa4e5aefaf11df43c617ae",
+    "shards": 4
+  },
+  "seismology": {
+    "family": "seismology",
+    "source_files_found": 11,
+    "eligible": 11,
+    "excluded": 0,
+    "cases": 110,
+    "schedule_records": 770,
+    "fatal_cases": 0,
+    "source_commit": "2f078d86b9d39835756f6ed9613279418a52371b",
+    "source_sha256": "5be7070a3a0428e37babab2c7a932b455eb504c753ce4549c9bc47cccb448799",
+    "wfinstances_sha": "1fd739359dd3ef2d68aa4e5aefaf11df43c617ae",
+    "shards": 4
+  },
+  "soykb": {
+    "family": "soykb",
+    "source_files_found": 10,
+    "eligible": 10,
+    "excluded": 0,
+    "cases": 100,
+    "schedule_records": 700,
+    "fatal_cases": 0,
+    "source_commit": "2f078d86b9d39835756f6ed9613279418a52371b",
+    "source_sha256": "5be7070a3a0428e37babab2c7a932b455eb504c753ce4549c9bc47cccb448799",
+    "wfinstances_sha": "1fd739359dd3ef2d68aa4e5aefaf11df43c617ae",
+    "shards": 4
+  },
+  "srasearch": {
+    "family": "srasearch",
+    "source_files_found": 25,
+    "eligible": 25,
+    "excluded": 0,
+    "cases": 250,
+    "schedule_records": 1750,
+    "fatal_cases": 0,
+    "source_commit": "2f078d86b9d39835756f6ed9613279418a52371b",
+    "source_sha256": "5be7070a3a0428e37babab2c7a932b455eb504c753ce4549c9bc47cccb448799",
+    "wfinstances_sha": "1fd739359dd3ef2d68aa4e5aefaf11df43c617ae",
+    "shards": 4
+  }
+}
