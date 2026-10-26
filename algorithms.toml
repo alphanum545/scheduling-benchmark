@@ -488,3 +488,14 @@ enabled = false
 source = "algorithms/makespan/dsla.cpp"
 args = ["slas"]
 enabled = false
+
+[dsla_fix]
+# DSLA with the repeated w(t,k) removed from the look-ahead score
+source = "algorithms/makespan/dsla_fix.cpp"
+enabled = false
+
+[slas_fix]
+# SLAS with the repeated w(t,k) removed from the look-ahead score
+source = "algorithms/makespan/dsla_fix.cpp"
+args = ["slas"]
+enabled = false
