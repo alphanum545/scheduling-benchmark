@@ -1,0 +1,7 @@
+Local engineering validation, 2026-10-26. No benchmark dataset used.
+Command: g++ -O1 -g -std=c++17 -fsanitize=address,undefined -fno-omit-frame-pointer test_bcr.cpp -o test_bcr && ./test_bcr
+Output:
+fan-in barrier: initial=12 single_best=12 joint=5
+random graphs=100 full-vs-incremental trial checks=6000 seed replay checks=200
+No sanitizer errors or failed assertions were reported.
+Source SHA-256: e1fb275b3131143d9c37eaac0bb61f081f7e36731263ac7363063134dc8f8281

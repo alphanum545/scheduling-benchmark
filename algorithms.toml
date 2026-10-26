@@ -38,3 +38,27 @@ source = "algorithms/makespan/aeft.cpp"
 
 [peft]
 source = "algorithms/makespan/peft.cpp"
+
+[bcr_scct_seed]
+source = "algorithms/makespan/bcr.cpp"
+args = ["scct", "seed"]
+
+[bcr_dsla_seed]
+source = "algorithms/makespan/bcr.cpp"
+args = ["dsla", "seed"]
+
+[bcr_scct]
+source = "algorithms/makespan/bcr.cpp"
+args = ["scct", "bundle"]
+
+[bcr_dsla_single]
+source = "algorithms/makespan/bcr.cpp"
+args = ["dsla", "single"]
+
+[bcr_dsla]
+source = "algorithms/makespan/bcr.cpp"
+args = ["dsla", "bundle"]
+
+[bcr_dsla_strict]
+source = "algorithms/makespan/bcr.cpp"
+args = ["dsla", "bundle", "strict"]
