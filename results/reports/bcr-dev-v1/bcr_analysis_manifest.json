@@ -1,0 +1,60 @@
+{
+  "measurement_run": "40312108945",
+  "report": "bcr-dev-v1",
+  "instances": 712,
+  "rows": 9256,
+  "named_dag_groups": 409,
+  "seed_makespan_mismatches": {
+    "scct": 0,
+    "dsla": 0
+  },
+  "raw_results_sha256": "2309b98f1651aa918341cd62613773ac6553540f8779febfda0b026c7e4b4c47",
+  "candidate_source_sha256": "e1fb275b3131143d9c37eaac0bb61f081f7e36731263ac7363063134dc8f8281",
+  "observed_algorithm_hashes": {
+    "scct": [
+      "9c39b59506ea"
+    ],
+    "dsla": [
+      "4d0137b23a7e"
+    ],
+    "heft": [
+      "ce7198351a89"
+    ],
+    "left": [
+      "fca9292564e3"
+    ],
+    "oppts": [
+      "0e77cfcc2314"
+    ],
+    "aeft": [
+      "abce2070a73d"
+    ],
+    "peft": [
+      "c6805f4a4bc6"
+    ],
+    "bcr_scct_seed": [
+      "d8ecff81d591"
+    ],
+    "bcr_dsla_seed": [
+      "ed8f41cd659e"
+    ],
+    "bcr_scct": [
+      "4836e2e1e6bf"
+    ],
+    "bcr_dsla_single": [
+      "b50355e0b993"
+    ],
+    "bcr_dsla": [
+      "5353b70e19db"
+    ],
+    "bcr_dsla_strict": [
+      "f9e21474a26b"
+    ]
+  },
+  "bootstrap_replicates": 4000,
+  "bootstrap_seed": 20261026,
+  "split": "development",
+  "group_independence_verified": false,
+  "all_rows_valid": true,
+  "complete_paired_coverage": true
+}
