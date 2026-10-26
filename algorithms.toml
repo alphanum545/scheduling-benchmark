@@ -1,0 +1,40 @@
+# EXPERIMENT-ONLY registry; original preserved in
+# experiments/scct-joint/algorithms_original.toml
+# Scope: main unchanged. Existing manual Benchmark workflow remains unchanged.
+
+[scct]
+source = "algorithms/makespan/scct.cpp"
+
+[scct_joint_base]
+source = "algorithms/makespan/scct_joint.cpp"
+args = []
+
+[scct_joint]
+source = "algorithms/makespan/scct_joint.cpp"
+args = ["joint"]
+
+[scct_diamond]
+source = "algorithms/makespan/scct_joint.cpp"
+args = ["diamond"]
+
+[scct_joint_diamond]
+source = "algorithms/makespan/scct_joint.cpp"
+args = ["joint", "diamond"]
+
+[oppts]
+source = "algorithms/makespan/oppts.cpp"
+
+[heft]
+source = "algorithms/makespan/heft.cpp"
+
+[left]
+source = "algorithms/makespan/left.cpp"
+
+[dsla]
+source = "algorithms/makespan/dsla.cpp"
+
+[aeft]
+source = "algorithms/makespan/aeft.cpp"
+
+[peft]
+source = "algorithms/makespan/peft.cpp"
