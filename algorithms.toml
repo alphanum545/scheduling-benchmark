@@ -499,3 +499,117 @@ enabled = false
 source = "algorithms/makespan/dsla_fix.cpp"
 args = ["slas"]
 enabled = false
+
+# ---- OPPTS repetition ablation (results/reports/scct/) ----
+[oppts_ft]
+# OPPTS, PCG table counts each child's computation once
+source = "algorithms/makespan/oppts_fix.cpp"
+args = ["table"]
+enabled = false
+
+[oppts_fs]
+# OPPTS, processor rule EFT + PCG - w(t,k) (task's own cost once)
+source = "algorithms/makespan/oppts_fix.cpp"
+args = ["select"]
+enabled = false
+
+[oppts_fb]
+# OPPTS, both repetitions removed
+source = "algorithms/makespan/oppts_fix.cpp"
+args = ["table", "select"]
+enabled = false
+
+# ---- SCCT: Sibling-Contention Cost Table scheduling (results/reports/scct/) ----
+[scct]
+# SCCT: contention table for processor selection, mu = 2 priority table
+source = "algorithms/makespan/scct.cpp"
+
+[scct_nocont]
+# ablation: no sibling contention in the selection table
+source = "algorithms/makespan/scct.cpp"
+args = ["nocont"]
+enabled = false
+
+[scct_noself]
+# ablation: no extra weight on the task's own cost in processor selection
+source = "algorithms/makespan/scct.cpp"
+args = ["noself"]
+enabled = false
+
+[scct_rankcont]
+# ablation: rank by the contention table (first SCCT version)
+source = "algorithms/makespan/scct.cpp"
+args = ["rank=cont"]
+enabled = false
+
+[scct_mu1]
+# ablation: OPPTS priority (mu = 1) with SCCT's selection table
+source = "algorithms/makespan/scct.cpp"
+args = ["mu=1"]
+enabled = false
+
+[scct_mu0]
+# mu sweep (dev split)
+source = "algorithms/makespan/scct.cpp"
+args = ["mu=0"]
+enabled = false
+
+[scct_mu05]
+# mu sweep (dev split)
+source = "algorithms/makespan/scct.cpp"
+args = ["mu=0.5"]
+enabled = false
+
+[scct_mu15]
+# mu sweep (dev split)
+source = "algorithms/makespan/scct.cpp"
+args = ["mu=1.5"]
+enabled = false
+
+[scct_mu3]
+# mu sweep (dev split)
+source = "algorithms/makespan/scct.cpp"
+args = ["mu=3"]
+enabled = false
+
+[scct_mu5]
+# mu sweep (dev split)
+source = "algorithms/makespan/scct.cpp"
+args = ["mu=5"]
+enabled = false
+
+[scct_mu10]
+# mu sweep (dev split)
+source = "algorithms/makespan/scct.cpp"
+args = ["mu=10"]
+enabled = false
+
+[scct_g025]
+# alternative priority: communication discount gamma, mu = 0 (dev split)
+source = "algorithms/makespan/scct.cpp"
+args = ["mu=0", "gamma=0.25"]
+enabled = false
+
+[scct_g05]
+# alternative priority: communication discount gamma, mu = 0 (dev split)
+source = "algorithms/makespan/scct.cpp"
+args = ["mu=0", "gamma=0.5"]
+enabled = false
+
+[scct_g075]
+# alternative priority: communication discount gamma, mu = 0 (dev split)
+source = "algorithms/makespan/scct.cpp"
+args = ["mu=0", "gamma=0.75"]
+enabled = false
+
+[scct_work]
+# alternative priority: contention table + computation-only path (dev split)
+source = "algorithms/makespan/scct.cpp"
+args = ["rank=cont", "work=mean"]
+enabled = false
+
+[scct_cap1]
+# alternative: contention limited to the p most critical children, first-version ranking (dev split)
+source = "algorithms/makespan/scct.cpp"
+args = ["rank=cont", "cap=1"]
+enabled = false
