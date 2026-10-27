@@ -6,7 +6,7 @@ Unifies two new methods, SCCT (sibling-contention cost table) and RCIS (joint pl
 - [PROTOCOL.md](PROTOCOL.md): configuration frozen before the single test-split run (commit `0001f93`).
 - [cgs.cpp](cgs.cpp): the scheduler; options documented in its header.
 - [aeft_ins.cpp](aeft_ins.cpp): AEFT with the paper's insertion policy (fair comparator); reproduces the paper's worked example (makespan 76); `append` reproduces repository AEFT.
-- [peft_ins.cpp](peft_ins.cpp), [ippts_ins.cpp](ippts_ins.cpp), [bppts_ins.cpp](bppts_ins.cpp), [oppts_ins.cpp](oppts_ins.cpp): repository baselines with insertion placement only; `append` reproduces each original.
+- [peft_ins.cpp](peft_ins.cpp), [ippts_ins.cpp](ippts_ins.cpp), [bppts_ins.cpp](bppts_ins.cpp): repository baselines with insertion placement only; `append` reproduces each original.
 - [heft_ins.cpp](heft_ins.cpp): repository HEFT with insertion (fair comparator); `append` reproduces repository HEFT.
 - [scct_x.cpp](scct_x.cpp): SCCT with `ins`, `lam=`, `rank=heft` options used in the dev study; defaults reproduce `algorithms/makespan/scct.cpp`.
 - `results/`: per-instance dev (`dev_results.csv`) and test (`test_results.csv`) measurements and text summaries.
