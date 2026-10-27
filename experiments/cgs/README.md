@@ -9,6 +9,7 @@ Unifies two new methods, SCCT (sibling-contention cost table) and RCIS (joint pl
 - [peft_ins.cpp](peft_ins.cpp), [ippts_ins.cpp](ippts_ins.cpp), [bppts_ins.cpp](bppts_ins.cpp): repository baselines with insertion placement only; `append` reproduces each original.
 - [heft_ins.cpp](heft_ins.cpp): repository HEFT with insertion (fair comparator); `append` reproduces repository HEFT.
 - [scct_x.cpp](scct_x.cpp): SCCT with `ins`, `lam=`, `rank=heft` options used in the dev study; defaults reproduce `algorithms/makespan/scct.cpp`.
+- [external/](external/): WfInstances benchmark (287 real workflows, 3,444 instances): protocol, converter, runner, [results](external/RESULTS.md).
 - `results/`: per-instance dev (`dev_results.csv`) and test (`test_results.csv`) measurements and text summaries.
 - [run.py](run.py), [cmp.py](cmp.py), [fam.py](fam.py), [summ.py](summ.py): local runner and analysis scripts.
 
