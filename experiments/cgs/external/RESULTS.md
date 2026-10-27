@@ -38,8 +38,9 @@ median favours CGS (+0.85 %) while the mean favours Look-ahead HEFT; against AEF
   fan-out costs that CGS's two-parent joint placement does not.
 - **AEFT wins at low communication** (CCR 0.1: 653 losses vs 343 wins, −0.26 %), and on Sarek germline (−1.39 %),
   SRASearch (−1.78 %) and BWA (−0.95 %).
-- CGS beats PEFT, BPPTS and IPPTS in every family except one small case (PEFT on varlociraptor, −0.28 %), and HEFT in
-  15 of 17 families.
+- CGS beats IPPTS in every family, and PEFT and BPPTS in every family but one each (PEFT on varlociraptor,
+  −0.28 %; BPPTS on the single Nextflow ro-crate workflow, −1.66 %); it beats HEFT in 15 of 17 families (losses on
+  SoyKB, −3.46 %, and Nextflow ro-crate, −2.97 %).
 
 Per-family, per-P and per-β tables: [analysis.txt](analysis.txt).
 
