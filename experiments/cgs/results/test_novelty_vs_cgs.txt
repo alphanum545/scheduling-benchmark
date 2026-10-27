@@ -1,6 +1,5 @@
 common instances: 2102; reference = cgs (positive gain = algo shorter than cgs)
 algo                 valid    mean mk    gain%         W/T/L          p    rt s
-dsla             2102/2102    4513.47   -1.656   737/72/1293   1.86e-19  0.0321
 cgs_nocont       2102/2102    4525.16   -0.172   827/396/879   3.35e-01  0.0557
 cgs              2102/2102    4526.84    0.000      0/2102/0             0.0347
 cgs_chk          2102/2102    4526.84    0.000      0/2102/0             0.0557

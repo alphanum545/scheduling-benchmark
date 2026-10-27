@@ -1,6 +1,5 @@
 common instances: 712; reference = cgs (positive gain = algo shorter than cgs)
 algo                 valid    mean mk    gain%         W/T/L          p    rt s
-dsla              712/712     4340.09   -1.604    255/29/428   2.45e-06  0.0372
 cgs               712/712     4352.14    0.000       0/712/0             0.0355
 cgs_credit0.5     712/712     4363.75   -0.162     73/557/82   3.53e-02  0.0347
 h05_nocont        712/712     4367.15   -1.083    234/94/384   2.45e-11  0.0301

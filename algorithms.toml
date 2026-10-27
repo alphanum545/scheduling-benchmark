@@ -628,3 +628,6 @@ source = "experiments/cgs/heft_ins.cpp"
 [scct_ins]
 source = "experiments/cgs/scct_x.cpp"
 args = ["ins"]
+
+[aeft_ins]
+source = "experiments/cgs/aeft_ins.cpp"
