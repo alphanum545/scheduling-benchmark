@@ -51,3 +51,12 @@ source = "algorithms/makespan/scct.cpp"
 
 [dsla]
 source = "algorithms/makespan/dsla.cpp"
+
+# experiments/rcis-gated: commitment-timing repair of RCIS (dev-split exploration, 2026-10-27)
+[rcis_gated]
+source = "experiments/rcis-gated/rcis_gated.cpp"
+args = ["--gate=2", "--commit=1"]
+
+[rcis_gate2]
+source = "experiments/rcis-gated/rcis_gated.cpp"
+args = ["--gate=2"]
