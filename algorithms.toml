@@ -613,3 +613,18 @@ enabled = false
 source = "algorithms/makespan/scct.cpp"
 args = ["rank=cont", "cap=1"]
 enabled = false
+
+# experiments/cgs (2026-10-27): CGS and its insertion comparators
+[cgs]
+source = "experiments/cgs/cgs.cpp"
+
+[cgs_single]
+source = "experiments/cgs/cgs.cpp"
+args = ["single"]
+
+[heft_ins]
+source = "experiments/cgs/heft_ins.cpp"
+
+[scct_ins]
+source = "experiments/cgs/scct_x.cpp"
+args = ["ins"]
