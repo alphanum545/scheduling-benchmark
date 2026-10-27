@@ -1,0 +1,5 @@
+# Frozen first RCIS corpus experiment
+
+Development split only, all available families, all processor counts and graph sizes. Re-run each registered algorithm in the same workflow; do not reuse older baselines' measurements. Comparisons: HEFT, PEFT, PPTS, IPPTS, IPEFT, LSTD, MPEFT, AEFT, OPPTS, LEFT, SCCT, DSLA, and RCIS variants (`rcis_single`, `rcis_append`, `rcis_no_common_target`). Source and parameters committed before the run. 20 shards; the workflow is unchanged. All observations retained; report failed schedules separately from valid runs. No test-split selection, no claiming superior performance without paired measurements.
+
+Research question: Is this joint-closure insertion mechanism more effective than its independent task and non-insertion ablations? Comparators are context, not a requirement to beat DSLA or SCCT. Record full distribution, per-family gains and regressions, scheduling-time overhead, and all validity failures. Follow up with code audit, feasibility on DAGs with zero durations, and modern external baseline fidelity if results merit further study.

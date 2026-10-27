@@ -1,0 +1,53 @@
+# RCIS development-only registry. Original full registry moved intact to:
+# experiments/rcis-standalone/algorithms_original.toml
+# Source baselines on main are untouched.
+[rcis]
+source = "experiments/rcis-standalone/rcis.cpp"
+
+[rcis_single]
+source = "experiments/rcis-standalone/rcis.cpp"
+args = ["--single"]
+
+[rcis_append]
+source = "experiments/rcis-standalone/rcis.cpp"
+args = ["--append"]
+
+[rcis_no_common_target]
+source = "experiments/rcis-standalone/rcis.cpp"
+args = ["--no-common-target"]
+
+[heft]
+source = "algorithms/makespan/heft.cpp"
+
+[peft]
+source = "algorithms/makespan/peft.cpp"
+
+[ppts]
+source = "algorithms/makespan/ppts.cpp"
+
+[ippts]
+source = "algorithms/makespan/ippts.cpp"
+
+[ipeft]
+source = "algorithms/makespan/ipeft.cpp"
+
+[lstd]
+source = "algorithms/makespan/lstd.cpp"
+
+[mpeft]
+source = "algorithms/makespan/mpeft.cpp"
+
+[aeft]
+source = "algorithms/makespan/aeft.cpp"
+
+[oppts]
+source = "algorithms/makespan/oppts.cpp"
+
+[left]
+source = "algorithms/makespan/left.cpp"
+
+[scct]
+source = "algorithms/makespan/scct.cpp"
+
+[dsla]
+source = "algorithms/makespan/dsla.cpp"
