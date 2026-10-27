@@ -631,3 +631,15 @@ args = ["ins"]
 
 [aeft_ins]
 source = "experiments/cgs/aeft_ins.cpp"
+
+[peft_ins]
+source = "experiments/cgs/peft_ins.cpp"
+
+[ippts_ins]
+source = "experiments/cgs/ippts_ins.cpp"
+
+[bppts_ins]
+source = "experiments/cgs/bppts_ins.cpp"
+
+[oppts_ins]
+source = "experiments/cgs/oppts_ins.cpp"
