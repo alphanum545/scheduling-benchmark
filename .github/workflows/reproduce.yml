@@ -1,0 +1,53 @@
+name: Reproduce DSLA manuscript
+
+# Runs on every push (and manually). Regenerates all results of the manuscript from the pushed
+# commit, uploads them as an artifact, commits them to outputs/, and fails if any number differs
+# from the paper (see paper/verify.py).
+
+on:
+  push:
+    paths-ignore: ["outputs/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install pinned Python packages
+        run: python3 -m pip install -r requirements.txt
+      - name: Environment
+        run: |
+          echo "cores: $(nproc)"; g++ --version | head -1; python3 --version
+          python3 -c "import numpy, scipy, pandas, matplotlib; print(numpy.__version__, scipy.__version__, pandas.__version__, matplotlib.__version__)"
+      - name: Reproduce
+        id: repro
+        continue-on-error: true
+        run: ./reproduce.sh
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: dsla-manuscript-outputs
+          path: outputs/
+      - name: Commit outputs
+        if: ${{ always() && hashFiles('outputs/runs.csv') != '' }}
+        run: |
+          gzip -9 -f outputs/runs.csv
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f outputs
+          git commit -m "Reproduced outputs for ${GITHUB_SHA::7} (run ${GITHUB_RUN_ID})" || exit 0
+          git push
+      - name: Result
+        run: |
+          {
+            echo "## Verification"; echo '```'; cat outputs/VERIFY.txt 2>/dev/null || echo "no verification report"; echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          test "${{ steps.repro.outcome }}" = "success"

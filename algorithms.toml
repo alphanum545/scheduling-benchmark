@@ -1,0 +1,53 @@
+# Algorithms used in the DSLA manuscript (and nothing else).
+# Sources of heft..dsla are identical to alphanum545/scheduling-benchmark@2f078d8;
+# dsla_fix.cpp is from commit c5d7c89 (PR #11); dsla_var.cpp is the parametrized
+# ablation copy of dsla.cpp whose default arguments reproduce dsla.cpp exactly.
+
+# --- baselines
+[heft]
+source = "algorithms/makespan/heft.cpp"
+[peft]
+source = "algorithms/makespan/peft.cpp"
+[ippts]
+source = "algorithms/makespan/ippts.cpp"
+[aeft]
+source = "algorithms/makespan/aeft.cpp"
+[pmms]
+source = "algorithms/makespan/pmms.cpp"
+[bppts]
+source = "algorithms/makespan/bppts.cpp"
+
+# --- proposed method and its rank build
+[dsla]
+source = "algorithms/makespan/dsla.cpp"
+[slas]
+source = "algorithms/makespan/dsla.cpp"
+args = ["slas"]
+
+# --- ablations (Section 8.3)
+[dsla_fix]
+source = "algorithms/makespan/dsla_fix.cpp"
+[v_eft]
+source = "algorithms/makespan/dsla_var.cpp"
+args = ["mode=1"]
+[v_static]
+source = "algorithms/makespan/dsla_var.cpp"
+args = ["state=0"]
+[v_static_slas]
+source = "algorithms/makespan/dsla_var.cpp"
+args = ["state=0", "mode=0"]
+[v_allkids]
+source = "algorithms/makespan/dsla_var.cpp"
+args = ["R=0"]
+[v_nolook]
+source = "algorithms/makespan/dsla_var.cpp"
+args = ["lr=0", "le=0"]
+[v_nolook_rank]
+source = "algorithms/makespan/dsla_var.cpp"
+args = ["lr=0", "mode=0"]
+[v_rank01]
+source = "algorithms/makespan/dsla_var.cpp"
+args = ["lr=0.1", "mode=0"]
+[v_eft05]
+source = "algorithms/makespan/dsla_var.cpp"
+args = ["le=0.5", "mode=1"]

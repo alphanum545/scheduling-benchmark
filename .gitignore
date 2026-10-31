@@ -1,0 +1,6 @@
+.work/
+data/*
+!data/archives/
+data_index.csv
+outputs/
+__pycache__/
