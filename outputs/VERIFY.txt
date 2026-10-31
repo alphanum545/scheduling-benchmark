@@ -1,0 +1,14 @@
+PASS  instance index: 2814 instances, 712 dev, 2102 test
+PASS  runs: 47838 valid of 47838 (17 algorithms x 2814 expected)
+PASS  table friedman.tex identical to the manuscript
+PASS  table tab_ablation_rows.tex identical to the manuscript
+PASS  table tab_main_rows.tex identical to the manuscript
+PASS  table tab_rank_rows.tex identical to the manuscript
+PASS  table tab_replay_rows.tex identical to the manuscript
+PASS  table tab_secondary_rows.tex identical to the manuscript
+PASS  results.json matches the manuscript
+PASS  describe.json matches the manuscript
+PASS  example1: Table 2 values and valid schedules
+PASS  example2: Table 2 values and valid schedules
+
+REPRODUCED: all checks passed
