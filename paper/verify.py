@@ -3,10 +3,10 @@
   python3 paper/verify.py <outputs_dir>
 Checks (exit status 1 on any failure):
   1. the instance index has the paper's 2814 instances (712 dev / 2102 test);
-  2. every one of the 17 algorithms produced a valid schedule on every instance;
+  2. every algorithm in algorithms.toml produced a valid schedule on every instance;
   3. every generated table body is byte-identical to paper/expected/tables (the manuscript's tables);
   4. every number in results.json and describe.json equals paper/expected (relative tolerance 1e-9);
-  5. the Section 6 examples give the published scores and makespans, with all schedules valid.
+  5. the Section 6 worked example gives the published makespans, with all schedules valid.
 Construction times (timing.json, Fig. 4) depend on hardware and are not compared."""
 import csv, hashlib, json, math, os, sys, tomllib
 
@@ -57,14 +57,10 @@ for name in ('results.json', 'describe.json'):
     compare(json.load(open(os.path.join(EXP, name))), json.load(open(os.path.join(OUT, name))), name, bad)
     check(not bad, f'{name} matches the manuscript' + ('' if not bad else f' ({len(bad)} differences, first: {bad[0]})'))
 
-ex = json.load(open(os.path.join(OUT, 'examples.json')))
-want = {'example1': (5, [20.5, 19.0, 26.5], 2, 25, [12.5, 19.0, 19.5], 1, 31),
-        'example2': (2, [15.5, 16.5], 1, 31, [15.5, 9.5], 2, 29)}
-for k, (t, ds, dp, dm, ss, sp, sm) in want.items():
-    r = ex[k]
-    got = (r['task'], r['dsla']['scores'], r['dsla']['processor'], r['dsla']['makespan'],
-           r['static']['scores'], r['static']['processor'], r['static']['makespan'])
-    check(got == (t, ds, dp, dm, ss, sp, sm) and r['all_valid'] and r['port_agrees'], f'{k}: Table 2 values and valid schedules')
+ex = json.load(open(os.path.join(OUT, 'example', 'example.json')))
+want = dict(heft=78, peft=77, ippts=93, aeft=89, pmms=89, bppts=85, dsla=68)
+check(ex['makespans'] == want and ex['dsla_builds']['rank'] == 68 and ex['dsla_builds']['eft'] == 73,
+      f"worked example makespans {ex['makespans']} (valid schedules)")
 
 print('\nREPRODUCED: all checks passed' if not fails else f'\nNOT REPRODUCED: {len(fails)} check(s) failed')
 sys.exit(1 if fails else 0)

@@ -62,4 +62,10 @@ if R.get('ablation', {}).get('test'):
     keys = [k for k in ['v_nolook', 'v_static', 'dsla_fix', 'v_allkids', 'slas', 'v_eft', 'v_rank01', 'v_eft05'] if k in AT]
     rows = [f"{L[k]} & {f2(AT[k]['mean'])} & {ci(AT[k]['ci'])} & {AT[k]['wins']}/{AT[k]['ties']}/{AT[k]['losses']} & {pfmt(AT[k]['p_holm'])} & {f2(AA[k]['mean'])} \\\\" for k in keys]
     w('tab_ablation_rows.tex', '\n'.join(rows) + '\n')
+# methods not used as baselines
+if R.get('extra'):
+    XN = dict(cpop='CPOP', ppts='PPTS', ipeft='IPEFT', mpeft='MPEFT', left='LEFT', left_d='LEFT-D')
+    rows = [f"{XN[k]} & {v['n']} & {f2(v['mean'])} & {100 * v['wins'] / v['n']:.1f} & {100 * v['losses'] / v['n']:.1f} \\\\"
+            for k, v in R['extra'].items()]
+    w('tab_extra_rows.tex', '\n'.join(rows) + '\n')
 print('tables written')

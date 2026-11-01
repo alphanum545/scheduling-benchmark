@@ -174,6 +174,12 @@ def main():
                 lookahead=gm('dsla', 'v_nolook', ix), own_cost=gm('dsla', 'dsla_fix', ix), second_build=gm('dsla', 'slas', ix),
                 eft_selected_share=float((mk.loc[ix, 'v_eft'] < mk.loc[ix, 'slas']).mean()))
         out['state_within_rank_build'] = compare(mk, t, 'slas', 'v_static_slas', rng)
+    # methods discussed but not used as baselines (Section 2, Table "extra")
+    out['extra'] = {}
+    for b in ['cpop', 'ppts', 'ipeft', 'mpeft', 'left', 'left_d']:
+        if b in mk.columns:
+            r = compare(mk, t, 'dsla', b, rng)
+            out['extra'][b] = {k: r[k] for k in ('mean', 'ci', 'wins', 'ties', 'losses', 'n')}
     json.dump(out, open('results.json', 'w'), indent=1)
     print(json.dumps({k: out[k] for k in ('counts',)}, indent=1))
     for sp in ['test', 'all']:

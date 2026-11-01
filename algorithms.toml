@@ -51,3 +51,19 @@ args = ["lr=0.1", "mode=0"]
 [v_eft05]
 source = "algorithms/makespan/dsla_var.cpp"
 args = ["le=0.5", "mode=1"]
+
+# --- methods discussed but not used as baselines (Section 2.8, Table 2)
+[cpop]
+source = "algorithms/makespan/cpop.cpp"
+[ppts]
+source = "algorithms/makespan/ppts.cpp"
+[ipeft]
+source = "algorithms/makespan/ipeft.cpp"
+[mpeft]
+source = "algorithms/makespan/mpeft.cpp"
+[left]
+source = "algorithms/makespan/left.cpp"
+[left_d]
+source = "algorithms/makespan/left.cpp"
+args = ["dup"]
+duplication = true
