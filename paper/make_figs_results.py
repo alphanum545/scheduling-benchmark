@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Result figures for Section 8 (held-out test instances).
+"""Result figures of the CGS evaluation (held-out test instances; all methods with insertion).
 
   python3 make_figs_results.py <runs.csv> <out_dir>
 
@@ -7,8 +7,8 @@ fig_slr_tasks      mean SLR vs number of tasks, one panel per workflow family
 fig_slr_procs      mean SLR vs number of processors, one panel per workflow family
 fig_random         mean SLR of the random DAGs vs CCR, heterogeneity beta and size
 fig_speedup        mean speedup vs processors (workflow and random instances)
-fig_pairwise       share of instances on which DSLA is better / equal / worse
-fig_gain_dist      distribution of per-instance gains of DSLA over each baseline
+fig_pairwise       share of instances on which CGS is better / equal / worse
+fig_gain_dist      distribution of per-instance gains of CGS over each baseline
 """
 import hashlib, os, sys
 import numpy as np, pandas as pd
@@ -18,10 +18,12 @@ import matplotlib.pyplot as plt
 
 RUNS, OUT = sys.argv[1], sys.argv[2]
 os.makedirs(OUT, exist_ok=True)
-ALG = ['dsla', 'heft', 'peft', 'ippts', 'aeft', 'pmms', 'bppts']
-NAME = dict(dsla='DSLA', heft='HEFT', peft='PEFT', ippts='IPPTS', aeft='AEFT', pmms='PMMS', bppts='BPPTS')
-COL = dict(dsla='#2a78d6', heft='#eb6834', peft='#1baf7a', ippts='#eda100', aeft='#e87ba4', pmms='#008300', bppts='#6250d6')
-MRK = dict(dsla='o', heft='s', peft='^', ippts='v', aeft='D', pmms='P', bppts='X')
+ALG = ['cgs', 'heft_ins', 'peft_ins', 'ippts_ins', 'aeft_ins', 'pmms_ins', 'bppts_ins', 'la_heft']
+NAME = dict(cgs='CGS', heft_ins='HEFT', peft_ins='PEFT', ippts_ins='IPPTS', aeft_ins='AEFT', pmms_ins='PMMS', bppts_ins='BPPTS',
+            la_heft='Lookahead HEFT')
+COL = dict(cgs='#2a78d6', heft_ins='#eb6834', peft_ins='#1baf7a', ippts_ins='#eda100', aeft_ins='#e87ba4', pmms_ins='#008300',
+           bppts_ins='#6250d6', la_heft='#8a5a3c')
+MRK = dict(cgs='o', heft_ins='s', peft_ins='^', ippts_ins='v', aeft_ins='D', pmms_ins='P', bppts_ins='X', la_heft='*')
 INK2, AXIS, GRID = '#52514e', '#c3c2b7', '#e1e0d9'
 plt.rcParams.update({
     'font.family': 'serif', 'font.serif': ['DejaVu Serif'], 'font.size': 7.5, 'axes.titlesize': 7.5,
@@ -47,13 +49,13 @@ def save(fig, name):
 
 
 def line(ax, x, y, a):
-    ax.plot(x, y, color=COL[a], marker=MRK[a], ms=3.6 if a != 'dsla' else 4.4, mec='#fcfcfb', mew=0.5,
-            lw=1.9 if a == 'dsla' else 1.0, zorder=3 if a == 'dsla' else 2, label=NAME[a])
+    ax.plot(x, y, color=COL[a], marker=MRK[a], ms=3.6 if a != 'cgs' else 4.4, mec='#fcfcfb', mew=0.5,
+            lw=1.9 if a == 'cgs' else 1.0, zorder=3 if a == 'cgs' else 2, label=NAME[a])
 
 
 def legend(fig, axes, y=1.04):
     h, l = axes.flat[0].get_legend_handles_labels()
-    fig.legend(h, l, loc='upper center', ncol=7, frameon=False, bbox_to_anchor=(0.5, y), handlelength=2.2)
+    fig.legend(h, l, loc='upper center', ncol=8, frameon=False, bbox_to_anchor=(0.5, y), handlelength=2.2)
 
 
 FAMS = ['LIGO', 'Montage', 'Genome', 'FFT', 'GE', 'LA']
@@ -115,15 +117,15 @@ save(fig, 'fig_speedup')
 # pairwise better / equal / worse and gain distribution
 mk = d.pivot_table(index='path', columns='algo', values='makespan')
 BASE = ALG[1:]
-better = [(mk.dsla < mk[b]).mean() * 100 for b in BASE]
-equal = [(mk.dsla == mk[b]).mean() * 100 for b in BASE]
-worse = [(mk.dsla > mk[b]).mean() * 100 for b in BASE]
-fig, axes = plt.subplots(1, 2, figsize=(7.1, 2.2), gridspec_kw=dict(width_ratios=[1, 1.15]))
+better = [(mk.cgs < mk[b]).mean() * 100 for b in BASE]
+equal = [(mk.cgs == mk[b]).mean() * 100 for b in BASE]
+worse = [(mk.cgs > mk[b]).mean() * 100 for b in BASE]
+fig, axes = plt.subplots(1, 2, figsize=(7.1, 2.45), gridspec_kw=dict(width_ratios=[1, 1.15]))
 ax = axes[0]
 y = np.arange(len(BASE))[::-1]
-ax.barh(y, better, color='#2a78d6', height=0.62, label='DSLA better', edgecolor='#fcfcfb', linewidth=1)
+ax.barh(y, better, color='#2a78d6', height=0.62, label='CGS better', edgecolor='#fcfcfb', linewidth=1)
 ax.barh(y, equal, left=better, color='#c3c2b7', height=0.62, label='Equal', edgecolor='#fcfcfb', linewidth=1)
-ax.barh(y, worse, left=np.add(better, equal), color='#eb6834', height=0.62, label='DSLA worse', edgecolor='#fcfcfb', linewidth=1)
+ax.barh(y, worse, left=np.add(better, equal), color='#eb6834', height=0.62, label='CGS worse', edgecolor='#fcfcfb', linewidth=1)
 for yi, b, wv in zip(y, better, worse):
     ax.text(b / 2, yi, f'{b:.1f}', ha='center', va='center', color='#ffffff', fontsize=6.5)
     if wv >= 6:
@@ -132,7 +134,7 @@ ax.set_yticks(y, [NAME[b] for b in BASE]); ax.set_xlim(0, 100); ax.set_xlabel('S
 ax.grid(axis='y', visible=False)
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.2), ncol=3, frameon=False, handlelength=1.2)
 ax = axes[1]
-gains = [100 * (mk[b] - mk.dsla) / mk[b] for b in BASE]
+gains = [100 * (mk[b] - mk.cgs) / mk[b] for b in BASE]
 bp = ax.boxplot(gains, orientation='horizontal', positions=y, widths=0.55, showfliers=False, patch_artist=True,
                 medianprops=dict(color='#0b0b0b', lw=1.1), whiskerprops=dict(color=INK2, lw=0.8),
                 capprops=dict(color=INK2, lw=0.8), boxprops=dict(lw=0.8, color=INK2))
@@ -140,7 +142,7 @@ for patch in bp['boxes']: patch.set_facecolor('#9ec5f4')
 for yi, gv in zip(y, gains):
     ax.plot(gv.mean(), yi, 'o', color='#2a78d6', ms=3.8, mec='#fcfcfb', mew=0.6, zorder=4)
 ax.axvline(0, color=AXIS, lw=0.8, zorder=0)
-ax.set_yticks(y, [NAME[b] for b in BASE]); ax.set_xlabel('Gain of DSLA per instance (%)')
+ax.set_yticks(y, [NAME[b] for b in BASE]); ax.set_xlabel('Gain of CGS per instance (%)')
 ax.grid(axis='y', visible=False)
 ax.set_title('Box: quartiles; whiskers: 1.5 IQR; dot: mean', color=INK2, pad=3, fontsize=6.8)
 fig.tight_layout(w_pad=2.0)

@@ -1,0 +1,22 @@
+{
+ "classic_topcuoglu": {
+  "cgs": 76,
+  "heft_ins": 80,
+  "peft_ins": 85,
+  "ippts_ins": 95,
+  "aeft_ins": 76,
+  "pmms_ins": 73,
+  "bppts_ins": 73,
+  "la_heft": 76
+ },
+ "lookahead_heft_fig1": {
+  "cgs": 184,
+  "heft_ins": 260,
+  "peft_ins": 184,
+  "ippts_ins": 184,
+  "aeft_ins": 227,
+  "pmms_ins": 184,
+  "bppts_ins": 201,
+  "la_heft": 184
+ }
+}

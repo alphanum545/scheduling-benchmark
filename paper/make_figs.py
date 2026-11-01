@@ -19,8 +19,9 @@ plt.rcParams.update({
     'axes.spines.top': False, 'axes.spines.right': False, 'axes.grid': True, 'grid.color': GRID,
     'grid.linewidth': 0.5, 'axes.axisbelow': True, 'pdf.fonttype': 42, 'lines.linewidth': 1.4,
     'figure.dpi': 200})
-NAMES = dict(heft='HEFT', peft='PEFT', ippts='IPPTS', aeft='AEFT', pmms='PMMS', bppts='BPPTS', virtual_best='Virtual best')
-BASE = ['heft', 'peft', 'ippts', 'aeft', 'pmms', 'bppts']
+NAMES = dict(heft_ins='HEFT', peft_ins='PEFT', ippts_ins='IPPTS', aeft_ins='AEFT', pmms_ins='PMMS', bppts_ins='BPPTS',
+             la_heft='Lookahead HEFT', virtual_best='Virtual best')
+BASE = ['heft_ins', 'peft_ins', 'ippts_ins', 'aeft_ins', 'pmms_ins', 'bppts_ins', 'la_heft']
 
 
 def save(fig, name):
@@ -36,9 +37,9 @@ def family_heatmap():
     cols = BASE + ['virtual_best']
     M = np.array([[fam[f][c]['mean'] for c in cols] for f in order])
     lab = [f if not f.startswith('R-') else 'R: CCR {} / β {}'.format(*f[5:].split('-b')) for f in order]
-    ns = [fam[f]['heft']['n'] for f in order]
+    ns = [fam[f]['heft_ins']['n'] for f in order]
     cmap = LinearSegmentedColormap.from_list('div', ['#d03b3b', '#f0efec', '#2a78d6'])
-    fig, ax = plt.subplots(figsize=(3.45, 3.9))
+    fig, ax = plt.subplots(figsize=(3.8, 3.9))
     norm = TwoSlopeNorm(vmin=-10, vcenter=0, vmax=10)
     ax.imshow(np.clip(M, -10, 10), cmap=cmap, norm=norm, aspect='auto')
     for i in range(M.shape[0]):
@@ -51,14 +52,14 @@ def family_heatmap():
     ax.grid(False)
     for s in ax.spines.values(): s.set_visible(False)
     ax.axhline(5.5, color='#ffffff', lw=2)
-    ax.axvline(5.5, color='#ffffff', lw=2)
+    ax.axvline(len(BASE) - 0.5, color='#ffffff', lw=2)
     ax.tick_params(length=0)
     save(fig, 'fig_family_gain')
 
 
 # ---------- Figure: gain by p, CCR and beta (held-out), strongest comparators
 def strata_lines():
-    comps = ['heft', 'aeft', 'pmms', 'virtual_best']
+    comps = ['heft_ins', 'aeft_ins', 'la_heft', 'virtual_best']
     panels = [('p', 'Processors $p$', None), ('ccr', 'CCR (random DAGs)', ['0.1', '1', '10']),
               ('beta', 'Heterogeneity $\\beta$ (random DAGs)', ['0.1', '0.5', '1'])]
     fig, axes = plt.subplots(1, 3, figsize=(7.1, 2.05), sharey=False)
@@ -75,7 +76,7 @@ def strata_lines():
         ax.axhline(0, color=AXIS, lw=0.8, zorder=0)
         ax.set_xticks(x, [str(int(float(k))) if key == 'p' else k for k in ks])
         ax.set_xlabel(xl)
-    axes[0].set_ylabel('Mean gain of DSLA (%)')
+    axes[0].set_ylabel('Mean gain of CGS (%)')
     h, l = axes[0].get_legend_handles_labels()
     fig.legend(h, l, loc='upper center', ncol=4, frameon=False, bbox_to_anchor=(0.5, 1.07))
     fig.tight_layout(w_pad=1.2)
@@ -87,11 +88,10 @@ def ablation():
     if 'ablation' not in R or not R['ablation'].get('test'):
         return
     A = R['ablation']['test']
-    labels = dict(slas='Rank build only (SLAS)', v_eft='Min-EFT build only', v_static='Static state (both builds)',
-                  v_static_slas='Static state (rank build)', dsla_fix='No own-cost term $\\lambda w_{ik}$',
-                  v_allkids='All successors ($R=\\infty$)', v_nolook='No look-ahead ($\\lambda=0$, both builds)',
-                  v_rank01='Rank build, $\\lambda=0.1$', v_eft05='Min-EFT build, $\\lambda=0.5$')
-    keys = [k for k in ['v_nolook', 'v_static', 'dsla_fix', 'v_allkids', 'slas', 'v_eft', 'v_rank01', 'v_eft05'] if k in A]
+    labels = dict(cgs_single='No joint placement', cgs_credit0='Plain rank gate (no credit)',
+                  cgs_nogate='No gate', cgs_lam0='EFT-only selection ($\\lambda=0$)', cgs_tailnone='No downstream term in key',
+                  cgs_commitall='Commit the join too', cgs_parents3='Up to 3 parents')
+    keys = [k for k in labels if k in A]
     fig, ax = plt.subplots(figsize=(3.45, 0.28 * len(keys) + 0.5))
     y = np.arange(len(keys))[::-1]
     for yi, k in zip(y, keys):
@@ -101,7 +101,7 @@ def ablation():
         ax.text(max(v['ci'][1], 0) + 0.15, yi, f"{v['mean']:.2f}", va='center', fontsize=6.5, color=INK2)
     ax.axvline(0, color=AXIS, lw=0.8, zorder=0)
     ax.set_yticks(y, [labels[k] for k in keys])
-    ax.set_xlabel('Mean gain of DSLA over the variant (%)')
+    ax.set_xlabel('Mean gain of CGS over the variant (%)')
     ax.grid(axis='y', visible=False)
     ax.set_xlim(left=min(-0.3, min(A[k]['ci'][0] for k in keys) - 0.2), right=max(A[k]['ci'][1] for k in keys) + 1.1)
     save(fig, 'fig_ablation')
@@ -113,9 +113,9 @@ def timing():
         return
     T = json.load(open('timing/timing.json'))
     import collections
-    cfgs = ['HEFT-equivalent (lambda=0, rank)', 'SLAS (rank build)', 'DSLA', 'DSLA, all successors']
-    short = {'HEFT-equivalent (lambda=0, rank)': 'Rank build, no look-ahead', 'SLAS (rank build)': 'SLAS (rank build)',
-             'DSLA': 'DSLA', 'DSLA, all successors': 'DSLA, all successors'}
+    cfgs = ['cgs', 'cgs_single', 'heft_ins', 'aeft_ins', 'peft_ins', 'la_heft', 'read_only']
+    short = dict(cgs='CGS', cgs_single='CGS without joint placement', heft_ins='HEFT', aeft_ins='AEFT', peft_ins='PEFT',
+                 la_heft='Lookahead HEFT', read_only='Reading the input only')
     fig, axes = plt.subplots(1, 2, figsize=(7.1, 2.1))
     for ax, (st, var, fixed) in zip(axes, [('v', 'v', 16), ('p', 'p', 1000)]):
         for ci, c in enumerate(cfgs):
@@ -125,14 +125,14 @@ def timing():
                 if var == 'v' and r['p'] == 16 and r['set'] == 'v': pts[r['v']].append(r['sec'])
                 if var == 'p' and r['v'] == 1000 and (r['set'] == 'p' or r['p'] == 16): pts[r['p']].append(r['sec'])
             xs = sorted(pts); ys = [1000 * np.mean(pts[x]) for x in xs]
-            ax.plot(xs, ys, marker=MARK[ci], color=CAT[ci], ms=4, mec='#fcfcfb', mew=0.6, label=short[c])
+            ax.plot(xs, ys, marker=MARK[ci], color=CAT[ci] if c != 'read_only' else MUTED, ls='--' if c == 'read_only' else '-', ms=4, mec='#fcfcfb', mew=0.6, label=short[c])
         ax.set_xscale('log'); ax.set_yscale('log')
         ax.set_xlabel('Tasks $v$ ($p=16$)' if var == 'v' else 'Processors $p$ ($v=1000$)')
         xt = sorted({r[var] for r in T if (var == 'v' and r['set'] == 'v') or (var == 'p' and r['v'] == 1000)})
         ax.set_xticks(xt, [str(x) for x in xt]); ax.minorticks_off()
-    axes[0].set_ylabel('Construction time (ms)')
+    axes[0].set_ylabel('Wall time per run (ms)')
     h, l = axes[0].get_legend_handles_labels()
-    fig.legend(h, l, loc='upper center', ncol=4, frameon=False, bbox_to_anchor=(0.5, 1.07))
+    fig.legend(h, l, loc='upper center', ncol=4, frameon=False, bbox_to_anchor=(0.5, 1.12))
     fig.tight_layout(w_pad=1.5)
     save(fig, 'fig_time')
 

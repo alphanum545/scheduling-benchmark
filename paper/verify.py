@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
-"""verify.py: check that a fresh run reproduces the manuscript exactly.
+"""verify.py: check that a fresh run reproduces the CGS evaluation exactly.
   python3 paper/verify.py <outputs_dir>
 Checks (exit status 1 on any failure):
   1. the instance index has the paper's 2814 instances (712 dev / 2102 test);
   2. every algorithm in algorithms.toml produced a valid schedule on every instance;
-  3. every generated table body is byte-identical to paper/expected/tables (the manuscript's tables);
-  4. every number in results.json and describe.json equals paper/expected (relative tolerance 1e-9);
-  5. the Section 6 worked example gives the published makespans, with all schedules valid.
-Construction times (timing.json, Fig. 4) depend on hardware and are not compared."""
+  3. each insertion baseline in append mode gives the repository original's schedule on every instance
+     (HEFT: on 2811, the 3 known rank-tie differences listed in paper/expected/append_check.json);
+  4. every generated table body is byte-identical to paper/expected/tables;
+  5. every number in results.json and describe.json equals paper/expected (relative tolerance 1e-9);
+  6. the worked examples give the expected makespans (all schedules valid), including the results
+     published by the HEFT/AEFT papers (classic DAG: HEFT 80, AEFT 76) and the Lookahead HEFT paper
+     (its Fig. 1: HEFT 260, Lookahead HEFT 184).
+Scheduling times (timing.json) depend on hardware and are not compared."""
 import csv, hashlib, json, math, os, sys, tomllib
 
 OUT = sys.argv[1]
@@ -32,11 +36,17 @@ ok = {(r['algo'], r['path']) for r in runs if r['status'] == 'ok'}
 check(len(ok) == len(algos) * 2814 and len(runs) == len(ok),
       f'runs: {len(ok)} valid of {len(runs)} ({len(algos)} algorithms x 2814 expected)')
 
+ap = json.load(open(os.path.join(OUT, 'append_check.json')))
+check(ap == json.load(open(os.path.join(EXP, 'append_check.json')))
+      and all(v['identical'] == v['instances'] == 2814 for b, v in ap.items() if b != 'heft') and ap['heft']['identical'] == 2811,
+      'append fidelity: ' + ', '.join(f"{b} {v['identical']}/{v['instances']}" for b, v in ap.items())
+      + ' (heft_ins is a rewrite with floating-point ranks; the repository HEFT ranks in fixed point, so 3 rank ties break differently)')
+
 for f in sorted(os.listdir(os.path.join(EXP, 'tables'))):
     a = open(os.path.join(EXP, 'tables', f), 'rb').read()
     p = os.path.join(OUT, 'tables', f)
     b = open(p, 'rb').read() if os.path.exists(p) else None
-    check(a == b, f'table {f} identical to the manuscript')
+    check(a == b, f'table {f} identical to paper/expected')
 
 
 def compare(x, y, path, bad):
@@ -55,12 +65,14 @@ def compare(x, y, path, bad):
 for name in ('results.json', 'describe.json'):
     bad = []
     compare(json.load(open(os.path.join(EXP, name))), json.load(open(os.path.join(OUT, name))), name, bad)
-    check(not bad, f'{name} matches the manuscript' + ('' if not bad else f' ({len(bad)} differences, first: {bad[0]})'))
+    check(not bad, f'{name} matches paper/expected' + ('' if not bad else f' ({len(bad)} differences, first: {bad[0]})'))
 
 ex = json.load(open(os.path.join(OUT, 'example', 'example.json')))
-want = dict(heft=78, peft=77, ippts=93, aeft=89, pmms=89, bppts=85, dsla=68)
-check(ex['makespans'] == want and ex['dsla_builds']['rank'] == 68 and ex['dsla_builds']['eft'] == 73,
-      f"worked example makespans {ex['makespans']} (valid schedules)")
+c, l = ex['classic_topcuoglu'], ex['lookahead_heft_fig1']
+check(c['heft_ins'] == 80 and c['aeft_ins'] == 76 and l['heft_ins'] == 260 and l['la_heft'] == 184,
+      f"published example results: classic HEFT {c['heft_ins']} (80), AEFT {c['aeft_ins']} (76); "
+      f"Lookahead example HEFT {l['heft_ins']} (260), Lookahead HEFT {l['la_heft']} (184)")
+check(ex == json.load(open(os.path.join(EXP, 'example.json'))), f"worked example makespans {ex}")
 
 print('\nREPRODUCED: all checks passed' if not fails else f'\nNOT REPRODUCED: {len(fails)} check(s) failed')
 sys.exit(1 if fails else 0)

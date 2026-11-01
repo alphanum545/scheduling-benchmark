@@ -1,9 +1,56 @@
-# Algorithms used in the DSLA manuscript (and nothing else).
-# Sources of heft..dsla are identical to alphanum545/scheduling-benchmark@2f078d8;
-# dsla_fix.cpp is from commit c5d7c89 (PR #11); dsla_var.cpp is the parametrized
-# ablation copy of dsla.cpp whose default arguments reproduce dsla.cpp exactly.
+# Algorithms used in the CGS evaluation (and nothing else). DSLA is not part of this study.
+#
+# Placement: every compared method uses insertion (earliest idle gap that fits), as CGS does.
+# The *_ins sources are copies of the repository baselines with only the start-time rule changed;
+# their `append` argument restores the original rule and reproduces the original output exactly.
+# cgs.cpp, the *_ins.cpp files and la_heft.cpp are from alphanum545/scheduling-benchmark,
+# branch research/cgs-20261027 (experiments/cgs); pmms_ins.cpp was written for this package.
+# Append-only sources (algorithms/makespan) are identical to commit 2f078d8.
 
-# --- baselines
+# --- baselines (insertion)
+[heft_ins]
+source = "algorithms/insertion/heft_ins.cpp"
+[peft_ins]
+source = "algorithms/insertion/peft_ins.cpp"
+[ippts_ins]
+source = "algorithms/insertion/ippts_ins.cpp"
+[aeft_ins]
+source = "algorithms/insertion/aeft_ins.cpp"
+[pmms_ins]
+source = "algorithms/insertion/pmms_ins.cpp"
+[bppts_ins]
+source = "algorithms/insertion/bppts_ins.cpp"
+[la_heft]
+source = "algorithms/insertion/la_heft.cpp"
+
+# --- proposed method (frozen configuration, research/cgs-20261027 PROTOCOL.md)
+[cgs]
+source = "algorithms/insertion/cgs.cpp"
+
+# --- ablations and sensitivity (options documented in cgs.cpp)
+[cgs_single]
+source = "algorithms/insertion/cgs.cpp"
+args = ["single"]
+[cgs_credit0]
+source = "algorithms/insertion/cgs.cpp"
+args = ["credit=0"]
+[cgs_nogate]
+source = "algorithms/insertion/cgs.cpp"
+args = ["nogate"]
+[cgs_lam0]
+source = "algorithms/insertion/cgs.cpp"
+args = ["lam=0"]
+[cgs_tailnone]
+source = "algorithms/insertion/cgs.cpp"
+args = ["tail=none"]
+[cgs_commitall]
+source = "algorithms/insertion/cgs.cpp"
+args = ["commit=all"]
+[cgs_parents3]
+source = "algorithms/insertion/cgs.cpp"
+args = ["parents=3"]
+
+# --- the same baselines as published in the repository (append-only placement), for context
 [heft]
 source = "algorithms/makespan/heft.cpp"
 [peft]
@@ -17,42 +64,7 @@ source = "algorithms/makespan/pmms.cpp"
 [bppts]
 source = "algorithms/makespan/bppts.cpp"
 
-# --- proposed method and its rank build
-[dsla]
-source = "algorithms/makespan/dsla.cpp"
-[slas]
-source = "algorithms/makespan/dsla.cpp"
-args = ["slas"]
-
-# --- ablations (Section 8.3)
-[dsla_fix]
-source = "algorithms/makespan/dsla_fix.cpp"
-[v_eft]
-source = "algorithms/makespan/dsla_var.cpp"
-args = ["mode=1"]
-[v_static]
-source = "algorithms/makespan/dsla_var.cpp"
-args = ["state=0"]
-[v_static_slas]
-source = "algorithms/makespan/dsla_var.cpp"
-args = ["state=0", "mode=0"]
-[v_allkids]
-source = "algorithms/makespan/dsla_var.cpp"
-args = ["R=0"]
-[v_nolook]
-source = "algorithms/makespan/dsla_var.cpp"
-args = ["lr=0", "le=0"]
-[v_nolook_rank]
-source = "algorithms/makespan/dsla_var.cpp"
-args = ["lr=0", "mode=0"]
-[v_rank01]
-source = "algorithms/makespan/dsla_var.cpp"
-args = ["lr=0.1", "mode=0"]
-[v_eft05]
-source = "algorithms/makespan/dsla_var.cpp"
-args = ["le=0.5", "mode=1"]
-
-# --- methods discussed but not used as baselines (Section 2.8, Table 2)
+# --- methods discussed but not used as baselines (append-only, as in the repository)
 [cpop]
 source = "algorithms/makespan/cpop.cpp"
 [ppts]

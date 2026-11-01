@@ -1,8 +1,8 @@
-name: Reproduce DSLA manuscript
+name: Reproduce CGS evaluation
 
-# Runs on every push (and manually). Regenerates all results of the manuscript from the pushed
+# Runs on every push (and manually). Regenerates all results of the CGS evaluation from the pushed
 # commit, uploads them as an artifact, commits them to outputs/, and fails if any number differs
-# from the paper (see paper/verify.py).
+# from paper/expected (see paper/verify.py).
 
 on:
   push:
@@ -34,7 +34,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
-          name: dsla-manuscript-outputs
+          name: cgs-evaluation-outputs
           path: outputs/
       - name: Commit outputs
         if: ${{ always() && hashFiles('outputs/runs.csv') != '' }}

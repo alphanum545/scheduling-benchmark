@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Statistical analysis for the DSLA manuscript.
+"""Statistical analysis for the CGS manuscript (same statistics as the DSLA manuscript; DSLA is not included).
 
 Input : one or more run CSVs written by tools/bench.py run (all algorithms in algorithms.toml).
 Output: results.json with every number quoted in the manuscript.
 
 Conventions
-  gain_B(i) = 100 (C_B(i) - C_DSLA(i)) / C_B(i)   (positive favours DSLA)
+  gain_B(i) = 100 (C_B(i) - C_CGS(i)) / C_B(i)    (positive favours CGS)
   cluster   = (family, nodes, instance): workflow instances share one DAG across processor
               counts, so they are not independent observations.
   CI        = 95% percentile bootstrap over clusters (10,000 resamples, seed 20261031).
@@ -17,9 +17,11 @@ from scipy import stats
 
 STORE = sys.argv[1]
 EXTRA = sys.argv[2:]                       # optional extra CSVs with local ablation rows
-BASE = ['heft', 'peft', 'ippts', 'aeft', 'pmms', 'bppts']
-NAMES = dict(heft='HEFT', peft='PEFT', ippts='IPPTS', aeft='AEFT', pmms='PMMS', bppts='BPPTS',
-             dsla='DSLA', slas='SLAS')
+PROP = 'cgs'
+BASE = ['heft_ins', 'peft_ins', 'ippts_ins', 'aeft_ins', 'pmms_ins', 'bppts_ins', 'la_heft']   # all insertion-based
+APPEND = ['heft', 'peft', 'ippts', 'aeft', 'pmms', 'bppts']                                   # repository originals
+ABL = ['cgs_single', 'cgs_credit0', 'cgs_nogate', 'cgs_lam0', 'cgs_tailnone', 'cgs_commitall', 'cgs_parents3']
+EXTRA_M = ['cpop', 'ppts', 'ipeft', 'mpeft', 'lstd', 'left', 'left_d']
 B_REPS, SEED = 10000, 20261031
 
 
@@ -90,95 +92,91 @@ def friedman(mk, meta, algos):
 def main():
     mk, meta = load()
     rng = np.random.default_rng(SEED)
-    out = {'counts': {}, 'overall': {}, 'strata': {}, 'friedman': {}, 'slr': {}, 'secondary': {}}
+    out = {'counts': {}, 'overall': {}, 'strata': {}, 'friedman': {}, 'slr': {}, 'speedup': {}, 'efficiency': {},
+           'secondary': {}}
     out['counts'] = dict(instances=int(len(meta)), clusters=int(meta.cluster.nunique()),
                          test=int((meta.split == 'test').sum()), dev=int((meta.split == 'dev').sum()),
                          test_clusters=int(meta[meta.split == 'test'].cluster.nunique()),
                          workflow=int((meta.kind == 'workflow').sum()), random=int((meta.kind == 'random').sum()))
     vb = mk[BASE].min(axis=1)
     mk = mk.assign(virtual_best=vb)
+    d = pd.read_csv(STORE)
+    d = d[d.status == 'ok']
+    sp_eff = {c: d.pivot_table(index='path', columns='algo', values=c, aggfunc='first') for c in ('speedup', 'efficiency')}
     for sp in ['test', 'all', 'dev']:
         m = meta if sp == 'all' else meta[meta.split == sp]
-        res = {b: compare(mk, m, 'dsla', b, rng) for b in BASE}
+        res = {b: compare(mk, m, PROP, b, rng) for b in BASE}
         holm(res)
-        res['virtual_best'] = compare(mk, m, 'dsla', 'virtual_best', rng)
+        res['virtual_best'] = compare(mk, m, PROP, 'virtual_best', rng)
         out['overall'][sp] = res
-        out['friedman'][sp] = friedman(mk, m, ['dsla'] + BASE)
-        out['slr'][sp] = {a: float((mk.loc[m.index, a] / m.lb).mean()) for a in ['dsla'] + BASE}
+        out['friedman'][sp] = friedman(mk, m, [PROP] + BASE)
+        out['slr'][sp] = {a: float((mk.loc[m.index, a] / m.lb).mean()) for a in [PROP] + BASE}
+        for c in ('speedup', 'efficiency'):
+            out[c][sp] = {a: float(sp_eff[c].loc[m.index, a].mean()) for a in [PROP] + BASE}
     # strata on the held-out split
     t = meta[meta.split == 'test']
-    def strata(col, values):
+    def strata(tt, col, values):
         r = {}
         for v in values:
-            m = t[t[col] == v]
+            m = tt[tt[col] == v]
             if len(m):
-                r[str(v)] = {b: {k: compare(mk, m, 'dsla', b, rng)[k] for k in ('mean', 'ci', 'wins', 'ties', 'losses', 'n')}
+                r[str(v)] = {b: {k: compare(mk, m, PROP, b, rng)[k] for k in ('mean', 'ci', 'wins', 'ties', 'losses', 'n')}
                              for b in BASE + ['virtual_best']}
         return r
-    out['strata']['family'] = strata('family', sorted(t.family.unique()))
-    out['strata']['p'] = strata('p', sorted(t.p.unique()))
-    out['strata']['ccr'] = strata('ccr', ['0.1', '1', '10'])
-    out['strata']['beta'] = strata('beta', ['0.1', '0.5', '1'])
-    out['strata']['kind'] = strata('kind', ['workflow', 'random'])
-    # size bands on workflow families
-    t2 = t.assign(size=pd.cut(t.n, [0, 100, 500, 3000], labels=['<=100', '101-500', '>500']))
-    t_backup = t; t = t2
-    out['strata']['size'] = strata('size', ['<=100', '101-500', '>500'])
-    t = t_backup
+    out['strata']['family'] = strata(t, 'family', sorted(t.family.unique()))
+    out['strata']['p'] = strata(t, 'p', sorted(t.p.unique()))
+    out['strata']['ccr'] = strata(t, 'ccr', ['0.1', '1', '10'])
+    out['strata']['beta'] = strata(t, 'beta', ['0.1', '0.5', '1'])
+    out['strata']['kind'] = strata(t, 'kind', ['workflow', 'random'])
+    t2 = t.assign(size=pd.cut(t.n, [0, 100, 500, 3000], labels=['<=100', '101-500', '>500']).astype(str))
+    out['strata']['size'] = strata(t2, 'size', ['<=100', '101-500', '>500'])
     # secondary metrics (means over the held-out split) straight from the store
-    d = pd.read_csv(STORE)
-    d = d[(d.status == 'ok') & d.path.isin(t.index) & d.algo.isin(['dsla'] + BASE)]
-    out['secondary'] = d.groupby('algo')[['utilization', 'comm_ratio', 'imbalance', 'rob_ratio', 'rob_cv', 'cont_ratio']].mean().to_dict('index')
-    # robustness / contention paired: DSLA vs each baseline under perturbed and contention replays
-    rob = d.assign(rob_mk=d.makespan * d.rob_ratio).pivot_table(index='path', columns='algo', values='rob_mk')
-    cont = d.pivot_table(index='path', columns='algo', values='cont_mk')
+    ds = d[d.path.isin(t.index) & d.algo.isin([PROP] + BASE)]
+    out['secondary'] = ds.groupby('algo')[['utilization', 'comm_ratio', 'imbalance', 'rob_ratio', 'rob_cv', 'cont_ratio']].mean().to_dict('index')
+    # robustness / contention paired: CGS vs each baseline under perturbed and contention replays
+    rob = ds.assign(rob_mk=ds.makespan * ds.rob_ratio).pivot_table(index='path', columns='algo', values='rob_mk')
+    cont = ds.pivot_table(index='path', columns='algo', values='cont_mk')
     out['replay'] = {}
     for name, tab in (('noise', rob), ('contention', cont)):
         tab = tab.loc[t.index]
         r = {}
         for b in BASE:
-            x, y = tab['dsla'].to_numpy(float), tab[b].to_numpy(float)
+            x, y = tab[PROP].to_numpy(float), tab[b].to_numpy(float)
             g = 100 * (y - x) / y
             lo, hi = boot_ci(g, t.cluster.to_numpy(), rng)
             r[b] = dict(mean=float(g.mean()), ci=[lo, hi], wins=int((x < y).sum()), ties=int((x == y).sum()), losses=int((x > y).sum()))
         out['replay'][name] = r
-    # dual-policy selection (needs the EFT-only build, if available)
-    if 'v_eft' in mk.columns:
-        sel = {}
-        for sp in ['test', 'all']:
-            m = meta if sp == 'all' else meta[meta.split == sp]
-            r_, e_ = mk.loc[m.index, 'slas'], mk.loc[m.index, 'v_eft']
-            sel[sp] = dict(rank_strict=int((r_ < e_).sum()), eft_strict=int((e_ < r_).sum()), tie=int((e_ == r_).sum()))
-        out['selection'] = sel
-    # ablations on the held-out split: DSLA versus each variant (positive = full DSLA shorter)
-    abl = [c for c in ['slas', 'v_eft', 'v_static', 'dsla_fix', 'v_allkids', 'v_nolook', 'v_rank01', 'v_eft05', 'v_static_slas'] if c in mk.columns]
+    # ablations: full CGS versus each variant (positive = full CGS shorter)
+    abl = [c for c in ABL if c in mk.columns]
     out['ablation'] = {}
     for sp in ['test', 'all']:
         m = meta if sp == 'all' else meta[meta.split == sp]
-        res = {c: compare(mk, m, 'dsla', c, rng) for c in abl}
+        res = {c: compare(mk, m, PROP, c, rng) for c in abl}
         holm(res)
         out['ablation'][sp] = res
-    # mechanism-only comparison: no-look-ahead dual build versus single baselines (context)
-    if 'v_nolook' in mk.columns:
-        out['nolook_vs_base'] = {b: compare(mk, t, 'v_nolook', b, rng)['mean'] for b in BASE}
-    # mechanism effects by communication group on the held-out split (Section 8.3)
-    if 'v_static' in mk.columns:
-        grp = np.where(t.family.str.startswith('R-ccr10'), 'ccr10', np.where(t.family.str.startswith('R-ccr1-'), 'ccr1',
-              np.where(t.family.str.startswith('R-ccr0.1'), 'ccr0.1', 'workflow')))
-        gm = lambda a, b, ix: float((100 * (mk.loc[ix, b] - mk.loc[ix, a]) / mk.loc[ix, b]).mean())
-        out['mechanism_by_group'] = {}
-        for gname in ['ccr0.1', 'ccr1', 'ccr10', 'workflow']:
-            ix = t.index[grp == gname]
-            out['mechanism_by_group'][gname] = dict(
-                n=int(len(ix)), state_dual=gm('dsla', 'v_static', ix), state_rank=gm('slas', 'v_static_slas', ix),
-                lookahead=gm('dsla', 'v_nolook', ix), own_cost=gm('dsla', 'dsla_fix', ix), second_build=gm('dsla', 'slas', ix),
-                eft_selected_share=float((mk.loc[ix, 'v_eft'] < mk.loc[ix, 'slas']).mean()))
-        out['state_within_rank_build'] = compare(mk, t, 'slas', 'v_static_slas', rng)
-    # methods discussed but not used as baselines (Section 2, Table "extra")
+    # component effects by communication group on the held-out split
+    grp = np.where(t.family.str.startswith('R-ccr10'), 'ccr10', np.where(t.family.str.startswith('R-ccr1-'), 'ccr1',
+          np.where(t.family.str.startswith('R-ccr0.1'), 'ccr0.1', 'workflow')))
+    gm = lambda a, b, ix: float((100 * (mk.loc[ix, b] - mk.loc[ix, a]) / mk.loc[ix, b]).mean())
+    out['mechanism_by_group'] = {}
+    for gname in ['ccr0.1', 'ccr1', 'ccr10', 'workflow']:
+        ix = t.index[grp == gname]
+        out['mechanism_by_group'][gname] = dict(
+            n=int(len(ix)), joint_placement=gm(PROP, 'cgs_single', ix), comm_credit=gm(PROP, 'cgs_credit0', ix),
+            gate=gm(PROP, 'cgs_nogate', ix), table_in_selection=gm(PROP, 'cgs_lam0', ix),
+            changed_by_closures=float((mk.loc[ix, PROP] != mk.loc[ix, 'cgs_single']).mean()))
+    # context: CGS against the repository's append-only originals, and what insertion alone gives each baseline
+    out['append'] = {}
+    res = {b: compare(mk, t, PROP, b, rng) for b in APPEND}
+    holm(res)
+    out['append']['cgs_vs_original'] = res
+    out['append']['insertion_effect'] = {b: {k: v for k, v in compare(mk, t, b + '_ins', b, rng).items()
+                                             if k in ('mean', 'ci', 'wins', 'ties', 'losses', 'n')} for b in APPEND}
+    # methods discussed but not used as baselines (append-only, as in the repository)
     out['extra'] = {}
-    for b in ['cpop', 'ppts', 'ipeft', 'mpeft', 'lstd', 'left', 'left_d']:
+    for b in EXTRA_M:
         if b in mk.columns:
-            r = compare(mk, t, 'dsla', b, rng)
+            r = compare(mk, t, PROP, b, rng)
             out['extra'][b] = {k: r[k] for k in ('mean', 'ci', 'wins', 'ties', 'losses', 'n')}
     json.dump(out, open('results.json', 'w'), indent=1)
     print(json.dumps({k: out[k] for k in ('counts',)}, indent=1))
