@@ -64,7 +64,7 @@ if R.get('ablation', {}).get('test'):
     w('tab_ablation_rows.tex', '\n'.join(rows) + '\n')
 # methods not used as baselines
 if R.get('extra'):
-    XN = dict(cpop='CPOP', ppts='PPTS', ipeft='IPEFT', mpeft='MPEFT', left='LEFT', left_d='LEFT-D')
+    XN = dict(cpop='CPOP', ppts='PPTS', ipeft='IPEFT', mpeft='MPEFT', lstd='LSTD', left='LEFT', left_d='LEFT-D')
     rows = [f"{XN[k]} & {v['n']} & {f2(v['mean'])} & {100 * v['wins'] / v['n']:.1f} & {100 * v['losses'] / v['n']:.1f} \\\\"
             for k, v in R['extra'].items()]
     w('tab_extra_rows.tex', '\n'.join(rows) + '\n')

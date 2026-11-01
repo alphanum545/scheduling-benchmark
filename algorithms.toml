@@ -61,6 +61,9 @@ source = "algorithms/makespan/ppts.cpp"
 source = "algorithms/makespan/ipeft.cpp"
 [mpeft]
 source = "algorithms/makespan/mpeft.cpp"
+[lstd]
+source = "algorithms/makespan/lstd.cpp"
+duplication = true
 [left]
 source = "algorithms/makespan/left.cpp"
 [left_d]

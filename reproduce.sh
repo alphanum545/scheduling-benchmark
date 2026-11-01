@@ -16,7 +16,7 @@ python3 tools/prepare_data.py
 echo "== 2/8 index (2814 instances; six empty Montage files are excluded by the harness)"
 python3 tools/bench.py index --data data
 
-echo "== 3/8 schedules: 23 algorithms x 2814 instances, every schedule validated"
+echo "== 3/8 schedules: 24 algorithms x 2814 instances, every schedule validated"
 python3 tools/bench.py plan --algos all --force --out .work/plan.json
 python3 tools/bench.py run --data data --plan .work/plan.json --workers "$WORKERS" --out "$OUT/runs.csv"
 

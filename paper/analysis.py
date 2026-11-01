@@ -176,7 +176,7 @@ def main():
         out['state_within_rank_build'] = compare(mk, t, 'slas', 'v_static_slas', rng)
     # methods discussed but not used as baselines (Section 2, Table "extra")
     out['extra'] = {}
-    for b in ['cpop', 'ppts', 'ipeft', 'mpeft', 'left', 'left_d']:
+    for b in ['cpop', 'ppts', 'ipeft', 'mpeft', 'lstd', 'left', 'left_d']:
         if b in mk.columns:
             r = compare(mk, t, 'dsla', b, rng)
             out['extra'][b] = {k: r[k] for k in ('mean', 'ci', 'wins', 'ties', 'losses', 'n')}
