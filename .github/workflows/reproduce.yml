@@ -82,7 +82,8 @@ jobs:
           name: cgs-evaluation-outputs
           path: outputs/
       - name: Commit outputs
-        if: ${{ always() && hashFiles('outputs/runs.csv') != '' }}
+        # only once the pipeline reached verification: a run that stops early must not commit partial outputs
+        if: ${{ always() && hashFiles('outputs/VERIFY.txt') != '' }}
         run: |
           gzip -9 -f outputs/runs.csv
           git config user.name "github-actions[bot]"

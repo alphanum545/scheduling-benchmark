@@ -5,8 +5,9 @@ three modes, chosen by its trailing arguments:
 
   (none)                        compute every instance, then aggregate (the local, single-machine default)
   --shard <i> <n> <out.json>    compute only shard i of n and write {path: result} to out.json; no aggregate
-  --merge <glob>                read all shard files, put the results back in the original instance order,
-                                then aggregate exactly as in the default mode
+  --merge <file or glob> ...    read all shard files, put the results back in the original instance order,
+                                then aggregate exactly as in the default mode (everything after --merge is
+                                taken as files or globs, so a pattern the shell has already expanded works)
 
 Instances are assigned to shards by greedy longest-processing-time balancing on the cost n^2 (1 + p/16)
 (the harness's own cost model), so the assignment depends only on data_index.csv. Results are stored as
@@ -28,7 +29,9 @@ def parse(argv):
         return argv[:k] + argv[k + 4:], ('shard', i, n, out)
     if '--merge' in argv:
         k = argv.index('--merge')
-        return argv[:k] + argv[k + 2:], ('merge', argv[k + 1])
+        if k == len(argv) - 1:
+            sys.exit('--merge needs at least one file or glob')
+        return argv[:k], ('merge', argv[k + 1:])
     return argv, None
 
 
@@ -69,9 +72,9 @@ def save(results, mode):
 def load(paths, mode):
     """Results of all shards, as a list aligned with paths; fails if any path is missing or duplicated."""
     got = {}
-    files = sorted(glob.glob(mode[1]))
+    files = sorted({f for pat in mode[1] for f in glob.glob(pat)})
     if not files:
-        sys.exit(f'no shard files match {mode[1]}')
+        sys.exit(f'no shard files match {" ".join(mode[1])}')
     for fn in files:
         for p, r in json.load(open(fn)).items():
             if p in got:
