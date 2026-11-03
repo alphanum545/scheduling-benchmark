@@ -7,7 +7,9 @@ Checks (exit status 1 on any failure):
   3. each insertion baseline in append mode gives the repository original's schedule on every instance
      (HEFT: on 2811, the 3 known rank-tie differences listed in paper/expected/append_check.json);
   4. every generated table body is byte-identical to paper/expected/tables;
-  5. every number in results.json and describe.json equals paper/expected (relative tolerance 1e-9);
+  5. every number in results.json, describe.json and why_random/why_random.json equals paper/expected
+     (relative tolerance 1e-9); why_random.py itself fails unless the closure probe reproduces CGS's
+     schedule on every test instance;
   6. the worked examples give the expected makespans (all schedules valid), including the results
      published by the HEFT/AEFT papers (classic DAG: HEFT 80, AEFT 76) and the Lookahead HEFT paper
      (its Fig. 1: HEFT 260, Lookahead HEFT 184).
@@ -62,9 +64,12 @@ def compare(x, y, path, bad):
         bad.append(f'{path}: {y} != {x}')
 
 
-for name in ('results.json', 'describe.json'):
+for name in ('results.json', 'describe.json', 'why_random/why_random.json'):
     bad = []
-    compare(json.load(open(os.path.join(EXP, name))), json.load(open(os.path.join(OUT, name))), name, bad)
+    p = os.path.join(OUT, name)
+    if not os.path.exists(p):
+        check(False, f'{name} missing'); continue
+    compare(json.load(open(os.path.join(EXP, os.path.basename(name)))), json.load(open(p)), name, bad)
     check(not bad, f'{name} matches paper/expected' + ('' if not bad else f' ({len(bad)} differences, first: {bad[0]})'))
 
 ex = json.load(open(os.path.join(OUT, 'example', 'example.json')))
