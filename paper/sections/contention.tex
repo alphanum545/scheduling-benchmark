@@ -42,12 +42,18 @@ AEFT's by \WCWfPeftVol\,\% and \WCWfBpptsVol\,\%, and their contention makespan 
 \WCWfBpptsCont\,\%. Across all methods in Table~\ref{tab:contention}, the difference in contention makespan follows the
 difference in busiest-port load far more closely than the difference in planned makespan.
 
-\paragraph{Joint placement is not the cause.}
-CGS without joint placement already moves \WCWfCgsSingleVol\,\% more data than AEFT, so the extra volume comes
-from processor selection with the downstream table, not from the closures; forming closures at every
-opportunity (no gate) instead changes it to \WCWfCgsNogateVol\,\% relative to AEFT. Nor does CGS concentrate messages on
-particular processors: the median ratio of the busiest in-port's load to the mean is \WCWfCgsInConc{} for CGS
-and \WCWfAeftInConc{} for AEFT. On the random DAGs at CCR~10, where CGS's communication volume differs from
+\paragraph{The extra communication comes from the selection weight, not joint placement.}
+CGS without joint placement already moves \WCWfCgsSingleVol\,\% more data than AEFT, so the extra volume does not
+come from the closures; forming closures at every opportunity (no gate) instead changes it to
+\WCWfCgsNogateVol\,\% relative to AEFT. Nor does CGS concentrate messages on particular processors: the median
+ratio of the busiest in-port's load to the mean is \WCWfCgsInConc{} for CGS and \WCWfAeftInConc{} for AEFT. The
+extra volume comes from how strongly processor selection weighs the downstream table. The table itself reduces
+communication: with weight~0, which is HEFT, the volume is \WCWfHeftVol\,\% above AEFT's. CGS weighs its table
+by~0.5, where AEFT weighs its table by~1. Without closures, raising CGS's weight to 1 and~2 changes the volume
+to \WCWfWeightOneVol\,\% and \WCWfWeightTwoVol\,\% relative to AEFT, and the planned makespan to
+\WCWfWeightOnePlanned\,\% and \WCWfWeightTwoPlanned\,\%, against \WCWfCgsSingleVol\,\% and
+\WCWfCgsSinglePlanned\,\% at~0.5 (Table~\ref{tab:contention}). The weight of~0.5, chosen on the development split
+for planned makespan, thus buys shorter schedules with more communication. On the random DAGs at CCR~10, where CGS's communication volume differs from
 AEFT's by \WCRHighCgsVol\,\%, its gain over AEFT grows under contention, from \WCRHighAeftGainPlan\,\% to \WCRHighAeftGainCont\,\%.
 
 \paragraph{Implications.}
@@ -62,7 +68,8 @@ makespan.
 \caption{Contention replay on the test split. Inflation: mean ratio of contention to planned makespan on the
 workflows. Other columns: mean difference from AEFT (\%, positive = larger than AEFT) in planned makespan,
 volume of communication between processors, load of the busiest port (a lower bound on the contention
-makespan) and contention makespan, on the workflows and on the random DAGs with CCR~10.}
+makespan) and contention makespan, on the workflows and on the random DAGs with CCR~10. Indented rows:
+CGS without joint placement with selection weight 1 and~2 (CGS uses~0.5; weight~0 is HEFT).}
 \label{tab:contention}
 \footnotesize
 \setlength{\tabcolsep}{4.5pt}
