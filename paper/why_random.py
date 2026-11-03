@@ -26,7 +26,11 @@ import hashlib, json, os, re, subprocess, sys, tempfile
 from concurrent.futures import ProcessPoolExecutor
 import numpy as np, pandas as pd
 
-INDEX, DATA, BIN, RUNS, OUT = sys.argv[1:6]
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tools'))
+import shards   # --shard i n f computes one shard's instances; --merge glob aggregates all shards (identical result)
+
+ARGV, MODE = shards.parse(sys.argv[1:])
+INDEX, DATA, BIN, RUNS, OUT = (ARGV + [None] * 5)[:5]
 WF = ['FFT', 'GE', 'Genome', 'LA', 'LIGO', 'Montage']
 GROUPS = ['workflow', 'ccr0.1', 'ccr1', 'ccr10', 'random']
 LABEL = {'workflow': 'Workflows', 'ccr0.1': 'Random, CCR 0.1', 'ccr1': 'Random, CCR 1',
@@ -69,8 +73,15 @@ def measure(path):
 def main():
     idx = pd.read_csv(INDEX)
     idx = idx[[is_test(p) for p in idx.path]]
+    paths = list(idx.path)
+    todo = shards.mine(paths, MODE)
     with ProcessPoolExecutor(os.cpu_count()) as ex:
-        inst = pd.DataFrame(list(ex.map(measure, idx.path, chunksize=8))).set_index('path')
+        part = list(ex.map(measure, todo, chunksize=8))
+    if MODE and MODE[0] == 'shard':
+        shards.save(dict(zip(todo, part)), MODE)
+        return
+    results = shards.load(paths, MODE) if MODE else part
+    inst = pd.DataFrame(results).set_index('path')
     d = pd.read_csv(RUNS)
     d = d[d.status == 'ok']
     mk = d.pivot_table(index='path', columns='algo', values='makespan', aggfunc='first').loc[inst.index]

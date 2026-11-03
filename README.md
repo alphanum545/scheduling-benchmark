@@ -9,9 +9,14 @@ Scheduling), using the same benchmark, validator and statistics as the DSLA manu
     pip install -r requirements.txt
     ./reproduce.sh
 
-On GitHub, a push to this branch runs `.github/workflows/reproduce.yml`, which executes the same script on a
-GitHub-hosted runner, uploads `outputs/` as an artifact, commits it to the branch, and fails if any result
-differs from `paper/expected`.
+On GitHub, a push to this branch runs `.github/workflows/reproduce.yml`, which executes the same script on
+GitHub-hosted runners, uploads `outputs/` as an artifact, commits it to the branch, and fails if any result
+differs from `paper/expected`. There the per-instance work (schedules, fidelity check, instance statistics and
+the two analysis probes) is split across 20 parallel jobs, `./reproduce.sh shard <i> 20`, and one final job,
+`./reproduce.sh finish 20`, merges their files and runs the statistics, tables, figures, worked examples,
+timing and verification. The split is deterministic (`tools/bench.py plan` for the schedules,
+`tools/shards.py` for the rest) and merging restores the original instance order, so the outputs equal a
+single-machine run.
 
 ## What it does
 

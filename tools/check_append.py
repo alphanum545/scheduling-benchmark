@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 """check_append.py: fidelity of the insertion baselines.
 
-  python3 tools/check_append.py <data_dir> <bin_dir> <evaluate> <out.json> [workers]
+  python3 tools/check_append.py <data_dir> <bin_dir> <evaluate> <out.json> [workers] [--shard i n f | --merge glob]
 
 Each algorithms/insertion/<b>_ins.cpp is a repository baseline with only the start-time rule changed; its
 `append` argument restores the original rule. This runs <b>_ins append and the original <b> on every indexed
 instance and checks that the two schedules (task, start, finish, processor) are identical.
-<bin_dir> holds compiled heft, peft, ippts, aeft, pmms, bppts and their *_ins versions."""
+<bin_dir> holds compiled heft, peft, ippts, aeft, pmms, bppts and their *_ins versions.
+--shard / --merge split the instances across CI jobs (tools/shards.py); the merged result is identical."""
 import csv, json, os, subprocess, sys, tempfile
 from concurrent.futures import ThreadPoolExecutor
 
-data, bindir, tool, out_path = sys.argv[1:5]
-workers = int(sys.argv[5]) if len(sys.argv) > 5 else os.cpu_count()
-BASE = ['heft', 'peft', 'ippts', 'aeft', 'pmms', 'bppts']
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, 'tools'))
+import shards
+argv, MODE = shards.parse(sys.argv[1:])
+data, bindir, tool, out_path = argv[:4]
+workers = int(argv[4]) if len(argv) > 4 else os.cpu_count()
+BASE = ['heft', 'peft', 'ippts', 'aeft', 'pmms', 'bppts']
 paths = [r['path'] for r in csv.DictReader(open(os.path.join(ROOT, 'data_index.csv')))]
 
 
@@ -30,8 +34,12 @@ def one(path):
         return {b: sched([os.path.join(bindir, b)], d3) == sched([os.path.join(bindir, b + '_ins'), 'append'], d3) for b in BASE}
 
 
+todo = shards.mine(paths, MODE)
 with ThreadPoolExecutor(workers) as ex:
-    res = list(ex.map(one, paths))
+    part = list(ex.map(one, todo))
+if MODE and MODE[0] == 'shard':
+    shards.save(dict(zip(todo, part)), MODE); sys.exit(0)
+res = shards.load(paths, MODE) if MODE else part
 summary = {b: dict(identical=sum(r[b] for r in res), instances=len(res),
                    differing=[p for p, r in zip(paths, res) if not r[b]][:20]) for b in BASE}
 json.dump(summary, open(out_path, 'w'), indent=1)

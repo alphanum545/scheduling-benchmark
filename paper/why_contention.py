@@ -29,7 +29,11 @@ import hashlib, json, os, subprocess, sys, tempfile
 from concurrent.futures import ProcessPoolExecutor
 import numpy as np, pandas as pd
 
-INDEX, DATA, BIN, RUNS, OUT = sys.argv[1:6]
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tools'))
+import shards   # --shard i n f computes one shard's instances; --merge glob aggregates all shards (identical result)
+
+ARGV, MODE = shards.parse(sys.argv[1:])
+INDEX, DATA, BIN, RUNS, OUT = (ARGV + [None] * 5)[:5]
 ALG = {'cgs': ['cgs'], 'cgs_single': ['cgs', 'single'], 'cgs_nogate': ['cgs', 'nogate'],
        'aeft_ins': ['aeft_ins'], 'heft_ins': ['heft_ins'], 'pmms_ins': ['pmms_ins'], 'peft_ins': ['peft_ins'],
        'la_heft': ['la_heft'], 'bppts_ins': ['bppts_ins'],
@@ -110,8 +114,15 @@ def group_of(family):
 def main():
     idx = pd.read_csv(INDEX)
     idx = idx[[is_test(p) for p in idx.path]]
+    paths = list(idx.path)
+    todo = shards.mine(paths, MODE)
     with ProcessPoolExecutor(os.cpu_count()) as ex:
-        s = pd.DataFrame([r for chunk in ex.map(measure, idx.path, chunksize=4) for r in chunk])
+        part = list(ex.map(measure, todo, chunksize=4))
+    if MODE and MODE[0] == 'shard':
+        shards.save(dict(zip(todo, part)), MODE)
+        return
+    results = shards.load(paths, MODE) if MODE else part
+    s = pd.DataFrame([r for chunk in results for r in chunk])
     runs = pd.read_csv(RUNS)
     runs = runs[runs.status == 'ok'].set_index(['path', 'algo'])
     k = s[s.algo.isin(MAIN)].set_index(['path', 'algo'])   # weight variants are not in runs.csv
