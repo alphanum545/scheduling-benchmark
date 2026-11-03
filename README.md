@@ -23,6 +23,7 @@ differs from `paper/expected`.
 | Check that each insertion baseline in `append` mode equals the repository original on every instance | `outputs/append_check.json` |
 | Instance statistics | `outputs/describe.json` |
 | Statistics, tables, readable summary | `outputs/results.json`, `outputs/tables/`, `outputs/SUMMARY.md` |
+| Why CGS gains less on random DAGs: graph structure, closure probe, headroom (test split) | `outputs/why_random/`, `outputs/tables/tab_why_random_rows.tex`, `outputs/tables/why_random_macros.tex` |
 | Worked examples (classic Topcuoglu DAG; Lookahead HEFT paper's Fig. 1) | `outputs/example/` |
 | Scheduling time vs tasks and processors | `outputs/timing/timing.json` |
 | Figures | `outputs/figures/` |
@@ -43,6 +44,11 @@ differs from `paper/expected`.
 - **Context**: CGS against the append-only repository originals, the gain insertion alone gives each baseline,
   and methods discussed but not used as baselines.
 - **Scheduling time** vs number of tasks and processors.
+- **Why the gains are smaller on random DAGs** (`paper/why_random.py`, text in `paper/sections/random_graphs.tex`):
+  parents per task and share of tasks with 1–2 parents; from `tools/cgs_probe.cpp` (CGS with counters, same
+  schedules), how often a closure's join ready time is already set by parents placed earlier and how much of
+  it the closure decides; component gains and how many schedules closures shorten or lengthen; headroom against
+  max(critical path, total work / p), meaningful at CCR 0.1 only. Workflows pooled vs random by CCR.
 
 ## Algorithms (`algorithms.toml`)
 
@@ -70,7 +76,8 @@ Every compared method uses **insertion-based placement** (earliest idle gap that
 - every insertion baseline in `append` mode gives the original's schedule on all 2814 instances, except the
   three known HEFT cases below;
 - every table body equals `paper/expected/tables` byte for byte;
-- every number in `results.json` and `describe.json` equals `paper/expected`;
+- every number in `results.json`, `describe.json` and `why_random/why_random.json` equals `paper/expected`;
+- `cgs_probe` gives CGS's makespan on every test instance (`paper/why_random.py` exits otherwise);
 - the worked examples give the expected makespans, including the published ones
   (classic DAG: HEFT 80, AEFT 76; Lookahead HEFT paper: HEFT 260, Lookahead HEFT 184).
 
@@ -86,6 +93,7 @@ algorithms.toml        the 28 algorithm configurations
 data/archives/         workflow instance archives + SHA256SUMS
 tools/                 data preparation, random generator, harness, validator, fidelity check
 paper/                 analysis, tables, figures, examples, timing, verification
+paper/sections/        manuscript text that takes every number from generated macros
 paper/expected/        the expected tables and numbers, for verification only
 reproduce.sh           the full pipeline
 ```

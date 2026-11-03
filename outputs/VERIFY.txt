@@ -18,8 +18,11 @@ PASS  table tab_strata_family_rows.tex identical to paper/expected
 PASS  table tab_strata_kind_rows.tex identical to paper/expected
 PASS  table tab_strata_p_rows.tex identical to paper/expected
 PASS  table tab_strata_size_rows.tex identical to paper/expected
+PASS  table tab_why_random_rows.tex identical to paper/expected
+PASS  table why_random_macros.tex identical to paper/expected
 PASS  results.json matches paper/expected
 PASS  describe.json matches paper/expected
+PASS  why_random/why_random.json matches paper/expected
 PASS  published example results: classic HEFT 80 (80), AEFT 76 (76); Lookahead example HEFT 260 (260), Lookahead HEFT 184 (184)
 PASS  worked example makespans {'classic_topcuoglu': {'cgs': 76, 'heft_ins': 80, 'peft_ins': 85, 'ippts_ins': 95, 'aeft_ins': 76, 'pmms_ins': 73, 'bppts_ins': 73, 'la_heft': 76}, 'lookahead_heft_fig1': {'cgs': 184, 'heft_ins': 260, 'peft_ins': 184, 'ippts_ins': 184, 'aeft_ins': 227, 'pmms_ins': 184, 'bppts_ins': 201, 'la_heft': 184}}
 
