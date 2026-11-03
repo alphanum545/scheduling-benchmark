@@ -5,7 +5,9 @@
 
 Re-runs CGS (and its single / nogate variants) and the seven insertion baselines on every test instance,
 validates each schedule with <bin_dir>/evaluate and exits 1 unless its makespan and contention makespan equal
-runs.csv. For each schedule it then computes, from the one-port model of tools/evaluate.cpp (each processor
+runs.csv. Also runs CGS without closures at selection weights 1 and 2 (weight 0 is HEFT with insertion,
+0.5 is cgs_single), to separate the effect of the weight from the table; these are validated but are not in
+runs.csv, and are excluded from the inflation range and the correlations. For each schedule it then computes, from the one-port model of tools/evaluate.cpp (each processor
 sends one and receives one message at a time; a remote message occupies both ports for its whole cost):
 
   remote volume   total cost of messages between different processors
@@ -30,12 +32,16 @@ import numpy as np, pandas as pd
 INDEX, DATA, BIN, RUNS, OUT = sys.argv[1:6]
 ALG = {'cgs': ['cgs'], 'cgs_single': ['cgs', 'single'], 'cgs_nogate': ['cgs', 'nogate'],
        'aeft_ins': ['aeft_ins'], 'heft_ins': ['heft_ins'], 'pmms_ins': ['pmms_ins'], 'peft_ins': ['peft_ins'],
-       'la_heft': ['la_heft'], 'bppts_ins': ['bppts_ins']}
+       'la_heft': ['la_heft'], 'bppts_ins': ['bppts_ins'],
+       # selection-weight sensitivity (no closures); weight 0 is HEFT with insertion, weight 0.5 is cgs_single
+       'cgs_single_lam1': ['cgs', 'single', 'lam=1'], 'cgs_single_lam2': ['cgs', 'single', 'lam=2']}
+MAIN = ['cgs', 'cgs_single', 'cgs_nogate', 'aeft_ins', 'heft_ins', 'pmms_ins', 'peft_ins', 'la_heft', 'bppts_ins']
 NAME = dict(cgs='CGS', cgs_single='CGS without joint placement', cgs_nogate='CGS with ungated closures',
             aeft_ins='AEFT', heft_ins='HEFT', pmms_ins='PMMS', peft_ins='PEFT', la_heft='Lookahead HEFT',
-            bppts_ins='BPPTS')
+            bppts_ins='BPPTS', cgs_single_lam1='\\quad selection weight 1', cgs_single_lam2='\\quad selection weight 2')
 KEY = dict(cgs='Cgs', cgs_single='CgsSingle', cgs_nogate='CgsNogate', aeft_ins='Aeft', heft_ins='Heft',
-           pmms_ins='Pmms', peft_ins='Peft', la_heft='Lah', bppts_ins='Bppts')
+           pmms_ins='Pmms', peft_ins='Peft', la_heft='Lah', bppts_ins='Bppts', cgs_single_lam1='WeightOne',
+           cgs_single_lam2='WeightTwo')
 WF = ['FFT', 'GE', 'Genome', 'LA', 'LIGO', 'Montage']
 GROUPS = ['workflow'] + WF + ['ccr0.1', 'ccr1', 'ccr10']
 GKEY = dict(workflow='Wf', FFT='Fft', GE='Ge', Genome='Genome', LA='La', LIGO='Ligo', Montage='Montage',
@@ -108,7 +114,7 @@ def main():
         s = pd.DataFrame([r for chunk in ex.map(measure, idx.path, chunksize=4) for r in chunk])
     runs = pd.read_csv(RUNS)
     runs = runs[runs.status == 'ok'].set_index(['path', 'algo'])
-    k = s.set_index(['path', 'algo'])
+    k = s[s.algo.isin(MAIN)].set_index(['path', 'algo'])   # weight variants are not in runs.csv
     ref = runs.reindex(k.index)
     bad = int(((ref.makespan != k.makespan) | (ref.cont_mk != k.cont_mk)).sum())
     if bad:
@@ -136,7 +142,7 @@ def main():
                           diff_planned=diff(mk), diff_remote_vol=diff(rv), diff_port_bound=diff(pb), diff_cont=diff(cm),
                           gain_cgs_cont=float((100 * (cm[a] - cm.cgs) / cm[a]).mean()),
                           gain_cgs_planned=float((100 * (mk[a] - mk.cgs) / mk[a]).mean()))
-        lm, lc, lp = np.log(mk), np.log(cm), np.log(pb.where(pb > 0))
+        lm, lc, lp = np.log(mk[MAIN]), np.log(cm[MAIN]), np.log(pb[MAIN].where(pb[MAIN] > 0))
         corr_port, corr_plan = [], []
         for path in mk.index:
             x, y, z = lc.loc[path], lp.loc[path], lm.loc[path]
@@ -147,8 +153,8 @@ def main():
         lose, heavy = cm.cgs > cm[REF], pb.cgs > pb[REF]
         res['groups'][g] = dict(
             instances=int(len(mk)), per_algo=per,
-            inflation_min=float(min(v['inflation'] for v in per.values())),
-            inflation_max=float(max(v['inflation'] for v in per.values())),
+            inflation_min=float(min(per[a]['inflation'] for a in MAIN)),
+            inflation_max=float(max(per[a]['inflation'] for a in MAIN)),
             median_corr_cont_port=float(np.median(corr_port)), median_corr_cont_planned=float(np.median(corr_plan)),
             cgs_loses_to_aeft=int(lose.sum()),
             pct_losses_with_heavier_port=float(100 * heavy[lose].mean()) if lose.any() else 0.0,
@@ -161,7 +167,7 @@ def main():
     s.to_csv(os.path.join(OUT, 'why_contention', 'schedules.csv'), index=False)
     write_tables(res)
     w = res['groups']['workflow']
-    print(f"why_contention: {len(s)} schedules re-run, all equal to runs.csv")
+    print(f"why_contention: {len(s)} schedules re-run; the {int(s.algo.isin(MAIN).sum())} also in runs.csv equal it")
     print(f"  workflows: inflation {w['inflation_min']:.2f}-{w['inflation_max']:.2f}x; corr(cont, port) {w['median_corr_cont_port']:.2f}, "
           f"corr(cont, planned) {w['median_corr_cont_planned']:.2f}; CGS vs AEFT planned {w['per_algo']['cgs']['diff_planned']:.2f}%, "
           f"remote vol {w['per_algo']['cgs']['diff_remote_vol']:.2f}%, port {w['per_algo']['cgs']['diff_port_bound']:.2f}%, "
@@ -180,7 +186,8 @@ def f2(x): return _fmt(x, 2)
 def write_tables(res):
     G = res['groups']
     w, r10 = G['workflow']['per_algo'], G['ccr10']['per_algo']
-    order = ['cgs', 'cgs_single', 'cgs_nogate', 'aeft_ins', 'pmms_ins', 'heft_ins', 'peft_ins', 'la_heft', 'bppts_ins']
+    order = ['cgs', 'cgs_single', 'cgs_single_lam1', 'cgs_single_lam2', 'cgs_nogate', 'aeft_ins', 'pmms_ins',
+             'heft_ins', 'peft_ins', 'la_heft', 'bppts_ins']
     rows = []
     for a in order:
         cells = [w[a][k] for k in ('diff_planned', 'diff_remote_vol', 'diff_port_bound', 'diff_cont')] + \
