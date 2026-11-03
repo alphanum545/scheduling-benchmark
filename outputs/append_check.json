@@ -1,0 +1,36 @@
+{
+ "heft": {
+  "identical": 2811,
+  "instances": 2814,
+  "differing": [
+   "LIGO/400Nodes/32PROCESSORS/10_32.txt",
+   "LIGO/1000Nodes/32PROCESSORS/1_32.txt",
+   "R-ccr10-b0.1/1000Nodes/32PROCESSORS/5_32.txt"
+  ]
+ },
+ "peft": {
+  "identical": 2814,
+  "instances": 2814,
+  "differing": []
+ },
+ "ippts": {
+  "identical": 2814,
+  "instances": 2814,
+  "differing": []
+ },
+ "aeft": {
+  "identical": 2814,
+  "instances": 2814,
+  "differing": []
+ },
+ "pmms": {
+  "identical": 2814,
+  "instances": 2814,
+  "differing": []
+ },
+ "bppts": {
+  "identical": 2814,
+  "instances": 2814,
+  "differing": []
+ }
+}
