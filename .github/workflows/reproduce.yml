@@ -3,6 +3,11 @@ name: Reproduce CGS evaluation
 # Runs on every push (and manually). Regenerates all results of the CGS evaluation from the pushed
 # commit, uploads them as an artifact, commits them to outputs/, and fails if any number differs
 # from paper/expected (see paper/verify.py).
+#
+# The per-instance work is split across 20 parallel jobs (`./reproduce.sh shard <i> 20`); one final
+# job merges their files and does the rest (`./reproduce.sh finish 20`). The split is deterministic
+# and merging restores the original order, so the outputs equal a single-machine `./reproduce.sh`.
+# To change the number of shards, change the matrix list and SHARDS together.
 
 on:
   push:
@@ -12,10 +17,45 @@ on:
 permissions:
   contents: write
 
+# A newer push to the same branch supersedes a running reproduction (its outputs commit would be
+# rejected anyway, because the branch has moved).
+concurrency:
+  group: reproduce-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SHARDS: 20
+
 jobs:
-  reproduce:
+  shard:
+    name: shard ${{ matrix.shard }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 240
+    timeout-minutes: 60
+    strategy:
+      fail-fast: true
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install pinned Python packages
+        run: python3 -m pip install -r requirements.txt
+      - name: Run shard
+        run: ./reproduce.sh shard ${{ matrix.shard }} "$SHARDS"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shard-${{ matrix.shard }}
+          path: .work/shards/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 3
+
+  finish:
+    needs: shard
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -27,10 +67,15 @@ jobs:
         run: |
           echo "cores: $(nproc)"; g++ --version | head -1; python3 --version
           python3 -c "import numpy, scipy, pandas, matplotlib; print(numpy.__version__, scipy.__version__, pandas.__version__, matplotlib.__version__)"
-      - name: Reproduce
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: shard-*
+          merge-multiple: true
+          path: .work/shards
+      - name: Merge, analyse and verify
         id: repro
         continue-on-error: true
-        run: ./reproduce.sh
+        run: ./reproduce.sh finish "$SHARDS"
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
