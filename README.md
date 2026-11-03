@@ -24,6 +24,7 @@ differs from `paper/expected`.
 | Instance statistics | `outputs/describe.json` |
 | Statistics, tables, readable summary | `outputs/results.json`, `outputs/tables/`, `outputs/SUMMARY.md` |
 | Why CGS gains less on random DAGs: graph structure, closure probe, headroom (test split) | `outputs/why_random/`, `outputs/tables/tab_why_random_rows.tex`, `outputs/tables/why_random_macros.tex` |
+| What the contention replay measures: port loads of re-run schedules (test split) | `outputs/why_contention/`, `outputs/tables/tab_contention_rows.tex`, `outputs/tables/contention_macros.tex` |
 | Worked examples (classic Topcuoglu DAG; Lookahead HEFT paper's Fig. 1) | `outputs/example/` |
 | Scheduling time vs tasks and processors | `outputs/timing/timing.json` |
 | Figures | `outputs/figures/` |
@@ -49,6 +50,12 @@ differs from `paper/expected`.
   schedules), how often a closure's join ready time is already set by parents placed earlier and how much of
   it the closure decides; component gains and how many schedules closures shorten or lengthen; headroom against
   max(critical path, total work / p), meaningful at CCR 0.1 only. Workflows pooled vs random by CCR.
+- **What the contention replay measures** (`paper/why_contention.py`, text in `paper/sections/contention.tex`):
+  re-runs CGS (and `single`, `nogate`) and the seven baselines on the test split, checks each makespan and
+  contention makespan against `runs.csv`, and computes remote communication volume and the busiest-port load
+  (a lower bound on the one-port contention makespan). Reports inflation under contention, how often the
+  busiest port alone exceeds the planned makespan, the within-instance correlation of the contention makespan
+  with port load and with planned makespan, and each method's difference from AEFT in all four quantities.
 
 ## Algorithms (`algorithms.toml`)
 
@@ -76,8 +83,10 @@ Every compared method uses **insertion-based placement** (earliest idle gap that
 - every insertion baseline in `append` mode gives the original's schedule on all 2814 instances, except the
   three known HEFT cases below;
 - every table body equals `paper/expected/tables` byte for byte;
-- every number in `results.json`, `describe.json` and `why_random/why_random.json` equals `paper/expected`;
-- `cgs_probe` gives CGS's makespan on every test instance (`paper/why_random.py` exits otherwise);
+- every number in `results.json`, `describe.json`, `why_random/why_random.json` and
+  `why_contention/why_contention.json` equals `paper/expected`;
+- `cgs_probe` gives CGS's makespan on every test instance (`paper/why_random.py` exits otherwise), and every
+  schedule re-run by `paper/why_contention.py` matches `runs.csv` in makespan and contention makespan;
 - the worked examples give the expected makespans, including the published ones
   (classic DAG: HEFT 80, AEFT 76; Lookahead HEFT paper: HEFT 260, Lookahead HEFT 184).
 
