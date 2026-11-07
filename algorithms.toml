@@ -640,3 +640,48 @@ source = "experiments/cgs/ippts_ins.cpp"
 
 [bppts_ins]
 source = "experiments/cgs/bppts_ins.cpp"
+
+[la_heft]
+# Look-ahead HEFT (Bittencourt et al., PDP 2010), depth-1 "max" variant, insertion-based.
+# The strongest published comparator on the external WfInstances benchmark.
+source = "experiments/cgs/la_heft.cpp"
+
+# ---------------------------------------------------------------------------
+# CGS v2: depth-1 fan-out lookahead added to the placement score.
+#
+# Frozen CGS scores a placement by the task's own finish plus a static downstream
+# table. Look-ahead HEFT instead provisionally schedules the task's children, which
+# captures fan-out cost that CGS's own-finish score cannot see -- the diagnosed
+# reason it loses at high CCR on external workflows.
+#
+# cgs_v2 adds that term with weight wfo: score = FT + lam*T + wfo*lookaheadTail,
+# where lookaheadTail is the latest best-finish of u's children given the tentative
+# placement, minus u's own finish. wfo=0 is exactly frozen CGS (verified: identical
+# schedules on every instance checked).
+#
+# wfo=0 is registered below as a control so CI proves the refactor is clean.
+# ---------------------------------------------------------------------------
+[cgs_v2_w000]
+source = "experiments/cgs/cgs_v2.cpp"
+args = ["wfo=0"]
+enabled = false
+
+[cgs_v2_w010]
+source = "experiments/cgs/cgs_v2.cpp"
+args = ["wfo=0.1"]
+enabled = false
+
+[cgs_v2_w025]
+source = "experiments/cgs/cgs_v2.cpp"
+args = ["wfo=0.25"]
+enabled = false
+
+[cgs_v2_w050]
+source = "experiments/cgs/cgs_v2.cpp"
+args = ["wfo=0.5"]
+enabled = false
+
+[cgs_v2_w100]
+source = "experiments/cgs/cgs_v2.cpp"
+args = ["wfo=1"]
+enabled = false
