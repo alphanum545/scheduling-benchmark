@@ -1,5 +1,30 @@
 # Scheduling benchmark
 
+> ## This branch is the CGS paper's evidence base
+>
+> `paper/cgs-final` exists to reproduce the results in the CGS manuscript.
+> It is **not** the general research branch — for that use `main`.
+>
+> | | |
+> |---|---|
+> | Manuscript | https://github.com/Techietal/CGS-Manuscript (branch `draft/cgs-related-work-20261107`) |
+> | Evidence | `results/reports/cgs-paper-test/` |
+> | Statistics | `experiments/cgs/stats_paper.py` |
+> | Algorithms | 9 in `algorithms.toml`: `cgs`, `cgs_single`, `cgs_credit0`, `heft_ins`, `peft`, `aeft`, `bppts`, `left`, `la_heft` |
+> | Run | test split, 2,102 instances, 20 shards, run 42394446251 |
+>
+> **Reproduce the statistics:**
+> ```sh
+> python3 experiments/cgs/stats_paper.py results/reports/cgs-paper-test
+> ```
+>
+> **Re-run the benchmark:** Actions → Benchmark → `split=test`,
+> `algos=cgs,cgs_single,cgs_credit0,heft_ins,peft,aeft,bppts,left,la_heft`,
+> `report_name=cgs-paper-test`, `shards=20`.
+>
+> Excluded on purpose: OPPTS (unpublished), CACL (shared-bus model, not
+> comparable), the 80+ research variants.
+
 Runs DAG-scheduling algorithms on the workflow datasets in the cloud (GitHub Actions),
 checks every schedule, and produces results tables and paper-ready figures.
 
