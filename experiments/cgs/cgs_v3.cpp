@@ -73,7 +73,7 @@ double score(const Slot &s) { return s.finish + lam * T[s.task][s.proc]; }
 // candidate placement and takes the latest such finish: the quantity Look-ahead
 // HEFT minimises, and the one CGS's own-finish score cannot see.
 int pmode = 0;      // 0 = sum (frozen), 1 = fan, 2 = blend
-double beta = 0.5;  // blend weight on the static score
+double blendW = 0.5;  // blend weight on the static score
 
 double fanValue(int u, int q, const vector<Slot> &local) {
     Slot s = slot(u, q, local);
@@ -96,7 +96,7 @@ double placeScore(int u, int q, const vector<Slot> &local) {
     if (pmode == 0) return score(slot(u, q, local));
     double fan = fanValue(u, q, local);
     if (pmode == 1) return fan;
-    return fan + beta * score(slot(u, q, local));
+    return fan + blendW * score(slot(u, q, local));
 }
 
 Slot place(int u, const vector<Slot> &local) {
@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
         else if (x == "nogate") gate = false;
         else if (x.rfind("credit=", 0) == 0) credit = atof(v.c_str());
         else if (x == "fan") pmode = 1;
-        else if (x.rfind("blend=", 0) == 0) { pmode = 2; beta = atof(v.c_str()); }
+        else if (x.rfind("blend=", 0) == 0) { pmode = 2; blendW = atof(v.c_str()); }
         else if (x == "commit=all") commitAll = true;
         else if (x == "tail=none") tailT = false;
         else if (x.rfind("parents=", 0) == 0) maxPar = atoi(v.c_str());
