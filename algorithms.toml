@@ -730,3 +730,50 @@ enabled = false
 source = "experiments/cgs/cgs_v3.cpp"
 args = ["blend=2"]
 enabled = false
+
+# ---------------------------------------------------------------------------
+# CGS v4: CCR-gated fan-out weight.
+#
+# Evidence from the dev store (89 methods, 712 instances): CGS is the best
+# method overall and loses on exactly one family, high CCR (R-ccr10*, n=53).
+# There cgs_v2_w025 (fan-out weight 0.25) beats frozen CGS by +1.47%, while
+# the same weight loses on workflows and low CCR. So the weight should depend
+# on the graph, not be fixed.
+#
+# v4 measures CCR = mean communication cost / mean computation cost after
+# reading the graph, and uses the fan-out weight wfoHi only when CCR reaches
+# ccrGate. Measured CCR separates cleanly: R-ccr0.1 ~ 0.11, R-ccr1 ~ 1.04,
+# R-ccr10 ~ 9.67, Montage ~ 1.01, LIGO ~ 0.99.
+#
+# The gate is a graph property, not a per-instance tuned constant, and the
+# threshold is chosen on the dev split only.
+# ---------------------------------------------------------------------------
+[cgs_v4_g2]
+source = "experiments/cgs/cgs_v4.cpp"
+args = ["wfoHi=0.25", "ccrGate=2"]
+enabled = false
+
+[cgs_v4_g3]
+source = "experiments/cgs/cgs_v4.cpp"
+args = ["wfoHi=0.25", "ccrGate=3"]
+enabled = false
+
+[cgs_v4_g5]
+source = "experiments/cgs/cgs_v4.cpp"
+args = ["wfoHi=0.25", "ccrGate=5"]
+enabled = false
+
+[cgs_v4_g2w05]
+source = "experiments/cgs/cgs_v4.cpp"
+args = ["wfoHi=0.5", "ccrGate=2"]
+enabled = false
+
+[cgs_v4_g2w01]
+source = "experiments/cgs/cgs_v4.cpp"
+args = ["wfoHi=0.1", "ccrGate=2"]
+enabled = false
+
+[cgs_v4_off]
+# control: gate disabled must reproduce frozen CGS exactly
+source = "experiments/cgs/cgs_v4.cpp"
+enabled = false
