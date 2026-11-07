@@ -685,3 +685,48 @@ enabled = false
 source = "experiments/cgs/cgs_v2.cpp"
 args = ["wfo=1"]
 enabled = false
+
+# ---------------------------------------------------------------------------
+# CGS v3: replace the additive fan-out term with Look-ahead HEFT's actual
+# placement criterion.
+#
+# v2 folded a depth-1 fan-out estimate into the weighted sum
+# (FT + lam*T + wfo*tail) and moved CGS by only +0.08%, not significant.
+# The reason is structural: Look-ahead HEFT does not add a term to a sum, it
+# *selects* the processor by argmin over children of the latest child finish.
+#
+# v3 keeps CGS's gated join closures and HEFT rank, and changes only the
+# single-task placement rule:
+#   fan        argmin_k max_c bestFT(c | t on k)        -- Look-ahead HEFT's rule
+#   blend=<b>  argmin_k fan(t,k) + b*(FT(t,k)+lam*T)    -- fan with a static tie-in
+# Default (no flag) is exactly frozen CGS.
+# ---------------------------------------------------------------------------
+[cgs_v3]
+# control: default mode must reproduce frozen CGS exactly
+source = "experiments/cgs/cgs_v3.cpp"
+enabled = false
+
+[cgs_v3_fan]
+source = "experiments/cgs/cgs_v3.cpp"
+args = ["fan"]
+enabled = false
+
+[cgs_v3_b025]
+source = "experiments/cgs/cgs_v3.cpp"
+args = ["blend=0.25"]
+enabled = false
+
+[cgs_v3_b050]
+source = "experiments/cgs/cgs_v3.cpp"
+args = ["blend=0.5"]
+enabled = false
+
+[cgs_v3_b100]
+source = "experiments/cgs/cgs_v3.cpp"
+args = ["blend=1"]
+enabled = false
+
+[cgs_v3_b200]
+source = "experiments/cgs/cgs_v3.cpp"
+args = ["blend=2"]
+enabled = false
