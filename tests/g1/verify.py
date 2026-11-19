@@ -77,3 +77,36 @@ assert [(rows[t][1], rows[t][2]+1) for t in range(10)] == [
     (22,1),(51,1),(83,1),(29,1),(70,3),(46,2),(97,1),(77,2),(89,3),(122,2)]
 for method, expected in [('heft',133), ('lookahead',127)]:
     assert max(f for _,f,_ in run(example,method).values()) == expected
+
+
+# Source Figure 1, Bittencourt et al. (2010), transcribed before replay.
+example = Path(__file__).with_name('lookahead_fig1.d3').read_text()
+shared = [(0,19,1),(34,62,1),(62,98,1),(19,34,1),(36,86,2),(98,131,1)]
+for method, tail in [
+    ('heft', [(121,141,2),(119,143,3),(219,260,1)]),
+    ('lookahead', [(131,143,1),(112,134,2),(143,184,1)]),
+]:
+    result = subprocess.run([sys.argv[1], method], input=example, text=True,
+                            capture_output=True, check=True)
+    assert list(map(int, result.stdout.splitlines()[0].split())) == [1,4,2,3,5,6,7,8,9]
+    rows = verify(example, result.stdout)
+    assert [(s,f,k+1) for s,f,k in (rows[i] for i in range(9))] == shared + tail
+
+# Adversarial legality checks: overlap, early transfer, duplicate placement,
+# missing placement, incorrect duration, impossible CPU and negative start.
+case = encode([[2,2],[2,2],[2,2]],[(0,2,10)])
+valid = ['1 2 3','TASK ST FT PRO','1 0 2 1','2 2 4 1','3 12 14 2']
+verify(case,'\n'.join(valid))
+for index, replacement in [(3,'2 1 3 1'),(4,'3 11 13 2'),(4,'2 12 14 2'),
+                           (4,None),(2,'1 0 1 1'),(3,'2 2 4 3'),(3,'2 -2 0 2')]:
+    bad = valid.copy()
+    if replacement is None:
+        bad.pop(index)
+    else:
+        bad[index] = replacement
+    try:
+        verify(case,'\n'.join(bad))
+    except AssertionError:
+        continue
+    raise AssertionError('Legality checker accepted malformed schedule')
+print('Passed published decision traces and malformed-schedule rejection checks')
