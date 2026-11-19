@@ -488,3 +488,18 @@ enabled = false
 source = "algorithms/makespan/dsla.cpp"
 args = ["slas"]
 enabled = false
+
+[heft_insertion]
+source = "algorithms/makespan/list_insertion.cpp"
+args = ["heft"]
+enabled = false
+
+[peft_insertion]
+source = "algorithms/makespan/list_insertion.cpp"
+args = ["peft"]
+enabled = false
+
+[lookahead_insertion]
+source = "algorithms/makespan/list_insertion.cpp"
+args = ["lookahead"]
+enabled = false

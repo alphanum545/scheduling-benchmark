@@ -1,0 +1,9 @@
+# G1 comparator checks
+
+Build with g++ -std=c++17 -O2 algorithms/makespan/list_insertion.cpp -o /tmp/list_insertion and run python3 tests/g1/verify.py /tmp/list_insertion. Explicit opt-in registry IDs are heft_insertion, peft_insertion and lookahead_insertion. Existing heft and peft are append-only.
+
+HEFT follows Topcuoglu et al. (DOI 10.1109/71.993206). PEFT follows Arabnejad and Barbosa, Algorithm 1 (DOI 10.1109/TPDS.2013.57). Both use earliest adequate insertion gaps. The classic fixture is from manuscript commit b5f489d, reproducibility/examples/classic_topcuoglu.d3. HEFT and PEFT match the published classic example CPU lanes and endpoints (80 and 85) in Frontiers 10.3389/fenvs.2022.996483, Figure 3. The Lookahead value 76 on that input is an implementation regression value.
+
+Lookahead follows Bittencourt et al., Algorithm 1 (DOI 10.1109/PDP.2010.56), unweighted maximum over all direct children. Within a trial, reserve children in HEFT priority order with insertion, accounting for committed parents and previously placed trial tasks. Ignore unscheduled external parents in the trial. Each candidate owns a full copy of placements and processor intervals. For all variants equal task priorities favor the lower ready task ID. Equal objective values favor smaller actual finish, then lower CPU ID. Exit tasks use EFT.
+
+The independent schedule parser checks complete unique placement, order, durations, nonoverlap, precedence and transfers. Tests include a forced gap, a child-aware processor reversal, and 100 fixed-seed small graphs across all three methods. These fixtures are historical or diagnostic. No fresh cohort has been opened. Pending: original PEFT Table 3 and Lookahead Figure 1 full input/decision replay. Target Lookahead makespan 184 vs HEFT 260 on that figure. Authoritative graph edge labels were unavailable from the accessible text. Confirm these traces before treating G1 as complete.
