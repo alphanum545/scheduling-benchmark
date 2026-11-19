@@ -65,3 +65,15 @@ for _ in range(100):
     for method in ('heft','peft','lookahead'):
         run(encode(costs,edges),method)
 print("Passed classic, gap, lookahead and 300 seeded schedule-legality checks")
+
+# Arabnejad and Barbosa, Figure 1 and Table 3. Validate the placement
+# decisions in addition to the independently checked schedule legality.
+example = Path(__file__).with_name('peft_fig1.d3').read_text()
+result = subprocess.run([sys.argv[1], 'peft'], input=example, text=True,
+                        capture_output=True, check=True)
+assert list(map(int, result.stdout.splitlines()[0].split())) == [1,4,6,2,3,5,8,7,9,10]
+rows = verify(example, result.stdout)
+assert [(rows[t][1], rows[t][2]+1) for t in range(10)] == [
+    (22,1),(51,1),(83,1),(29,1),(70,3),(46,2),(97,1),(77,2),(89,3),(122,2)]
+for method, expected in [('heft',133), ('lookahead',127)]:
+    assert max(f for _,f,_ in run(example,method).values()) == expected
